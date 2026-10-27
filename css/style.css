@@ -1,0 +1,102 @@
+/* Estilos geométricos específicos */
+.font-sm { font-size: 0.85rem; }
+.tracking-2 { letter-spacing: 2px; }
+
+/* Gráficos del Dashboard */
+.lienzo-grafico-barra {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    height: 180px;
+    border-bottom: 2px solid #212529;
+    padding-top: 25px;
+}
+.columna-barra-contenedor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 30%;
+    height: 100%;
+    justify-content: flex-end;
+}
+.barra-llenado {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    min-height: 4px;
+}
+.barra-llenado::before {
+    content: attr(data-valor);
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+.barra-llenado.casual { background-color: #5856d6; }
+.barra-llenado.elegante { background-color: #ff2d55; }
+
+/* Lienzo de Líneas */
+.lienzo-grafico-lineas {
+    height: 180px;
+    border-bottom: 2px solid #212529;
+    position: relative;
+    margin-top: 25px;
+}
+.nodo-punto-linea {
+    width: 12px;
+    height: 12px;
+    background: #212529;
+    border-radius: 50%;
+    position: absolute;
+}
+.nodo-punto-linea:nth-child(1) { left: 15%; }
+.nodo-punto-linea:nth-child(2) { left: 50%; }
+.nodo-punto-linea:nth-child(3) { left: 85%; }
+.nodo-punto-linea::before {
+    content: attr(data-info);
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+.eje-x-simulado {
+    position: absolute;
+    bottom: -25px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    font-size: 0.75rem;
+}
+
+/* Reglas de Accesibilidad - Alto Contraste */
+.alto-contraste {
+    background-color: #121212 !important;
+    color: #00ff00 !important;
+}
+.alto-contraste .card, .alto-contraste .bg-white, .alto-contraste .bg-light {
+    background-color: #1a1a1a !important;
+    border: 1px solid #00ff00 !important;
+    color: #ffffff !important;
+}
+.alto-contraste h1, .alto-contraste h2, .alto-contraste h3, .alto-contraste h4, .alto-contraste th, .alto-contraste td, .alto-contraste span, .alto-contraste label {
+    color: #00ff00 !important;
+}
+.alto-contraste button, .alto-contraste .btn-dark {
+    background-color: #00ff00 !important;
+    color: #000000 !important;
+    border: 1px solid #ffffff !important;
+}
+/* Soporte para tablas y modales en Alto Contraste */
+.alto-contraste .modal-content, .alto-contraste .table {
+    background-color: #1a1a1a !important;
+    color: #00ff00 !important;
+    border: 1px solid #00ff00 !important;
+}
+.alto-contraste .list-group-item {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}

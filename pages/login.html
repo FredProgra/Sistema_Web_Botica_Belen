@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-light">
+
+    <div id="seccion-login" class="container my-5" style="max-width: 400px;">
+        <div class="card p-4 shadow-sm border-0">
+            <img src="../img/Botica_belen.png" alt="">
+            <h1 class="h4 text-center fw-bold mb-3 text-secondary">Sistema de Gestión e Inventario</h1>
+            
+            <form onsubmit="ejecutarLoginSimulado(event)">
+                <div class="mb-3">
+                    <label class="form-label font-sm">Usuario</label>
+                    <input type="text" id="login-correo" class="form-control" required placeholder="usuario">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-sm">Contraseña</label>
+                    <input type="password" id="login-pass" class="form-control" required placeholder="password">
+                </div>
+                <button type="submit" class="btn btn-dark w-100 fw-bold">Iniciar Sesión</button>
+            </form>
+            <p class="text-muted small text-center mt-3 mb-0"><a href="">¿Olvidó su contraseña?</a></p>
+            <p class="text-muted small text-center mt-3 mb-0">¿No tienes cuenta? <a href="">Registráte</a></p>
+        </div>
+    </div>
+
+    <div id="contenido-tienda" style="display: none;">
+        <div class="bg-secondary text-white py-1" role="complementary" aria-label="Herramientas de accesibilidad">
+            <div class="container d-flex justify-content-between align-items-center font-sm">
+                <span>Acceso Inclusivo (ODS 10) - Bienvenido: <strong id="usuario-logeado-nombre"></strong></span>
+                <div>
+                    <button class="btn btn-sm btn-dark me-2" onclick="cambiarContraste()" aria-label="Cambiar a Alto Contraste">Contraste Alto</button>
+                    <button class="btn btn-sm btn-light me-1" onclick="alterarFuente(2)" aria-label="Aumentar tamaño de letra">A+</button>
+                    <button class="btn btn-sm btn-light" onclick="alterarFuente(-2)" aria-label="Disminuir tamaño de letra">A-</button>
+                    <button class="btn btn-sm btn-danger ms-2" onclick="cerrarSesionSimulada()">Salir</button>
+                </div>
+            </div>
+        </div>
+
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top" role="navigation">
+            <div class="container">
+                <a class="navbar-brand text-warning fw-bold tracking-2" href="dayluz.html">DAYLUZ</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link active" href="dayluz.html">Tienda Inclusiva</a></li>
+                        <li class="nav-item"><a class="nav-link" href="dueñadayluz.html">Panel Administrador</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container my-4">
+            <div class="alert alert-warning d-flex align-items-center" role="note">
+                <div class="me-3 fs-3">🌐</div>
+                <div>
+                    <strong>Compromiso Dayluz & ODS 10:</strong> Promovemos la reducción de desigualdades mediante un catálogo con tallas inclusivas y una plataforma adaptada para la diversidad funcional.
+                </div>
+            </div>
+
+            <section class="mb-4 bg-white p-3 rounded shadow-sm border border-light" aria-label="Buscador de productos">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <input type="text" id="campo-buscar" class="form-control" placeholder="¿Qué modelo de calzado buscas hoy?..." oninput="filtrarCatalogoProductos()">
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filtro-talla" class="form-select" onchange="filtrarCatalogoProductos()">
+                            <option value="">Todas las Tallas</option>
+                            <option value="34">Talla 34 (Inclusiva)</option>
+                            <option value="35">Talla 35</option>
+                            <option value="36">Talla 36</option>
+                            <option value="37">Talla 37</option>
+                            <option value="38">Talla 38</option>
+                            <option value="39">Talla 39</option>
+                            <option value="40">Talla 40</option>
+                            <option value="41">Talla 41</option>
+                            <option value="42">Talla 42 (Inclusiva)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filtro-categoria" class="form-select" onchange="filtrarCatalogoProductos()">
+                            <option value="">Todas las Líneas</option>
+                            <option value="Elegante">Línea Elegante</option>
+                            <option value="Casual">Línea Casual</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <div class="row g-4">
+                <section class="col-lg-8" aria-labelledby="titulo-catalogo">
+                    <h2 id="titulo-catalogo" class="h4 mb-3 fw-bold text-secondary">Catálogo de Calzado de Cuero</h2>
+                    <div id="grilla-productos" class="row row-cols-1 row-cols-md-2 g-3"></div>
+                    
+                    <div class="card p-3 shadow-sm border-0 mt-4 bg-white">
+                        <h3 class="h5 fw-bold text-secondary border-bottom pb-2">Opiniones de Clientes</h3>
+                        <div id="lista-comentarios" class="mb-3" style="max-height: 200px; overflow-y: auto;"></div>
+                        <form onsubmit="agregarOpinionUsuario(event)" class="bg-light p-2 rounded">
+                            <div class="row g-2">
+                                <div class="col-md-8">
+                                    <input type="text" id="op-comentario" class="form-control form-control-sm" placeholder="Escribe tu opinión sobre el calzado..." required>
+                                </div>
+                                <div class="col-md-2">
+                                    <select id="op-puntuacion" class="form-select form-select-sm">
+                                        <option value="⭐⭐⭐⭐⭐">5 ⭐</option>
+                                        <option value="⭐⭐⭐⭐">4 ⭐</option>
+                                        <option value="⭐⭐⭐">3 ⭐</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-sm btn-dark w-100 fw-bold">Enviar</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <aside class="col-lg-4">
+                    <div class="card p-3 shadow-sm border-0 bg-white">
+                        <h3 class="h5 fw-bold mb-3 border-bottom pb-2">Tu Carrito de Pedidos</h3>
+                        <div id="items-carrito-lista" class="mb-3"></div>
+                        <div class="d-flex justify-content-between align-items-center my-3 bg-light p-2 rounded">
+                            <span class="fw-semibold">Total a pagar:</span>
+                            <strong id="monto-total-soles" class="text-success fs-5">S/. 0.00</strong>
+                        </div>
+
+                        <div class="p-3 bg-light rounded border">
+                            <h4 class="h6 fw-bold mb-3">Datos para Confirmar Entrega</h4>
+                            <form id="formulario-compra-final" onsubmit="procesarEnvioPedidoWhatsApp(event)">
+                                <div class="mb-2">
+                                    <label for="nombre-cliente" class="form-label font-sm">Nombre Completo *</label>
+                                    <input type="text" id="nombre-cliente" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="telefono-cliente" class="form-label font-sm">Teléfono Celular *</label>
+                                    <input type="tel" id="telefono-cliente" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="direccion-cliente" class="form-label font-sm">Dirección de Entrega / Taller *</label>
+                                    <input type="text" id="direccion-cliente" class="form-control form-control-sm" required placeholder="Dirección o escribe 'Recojo en taller'">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label font-sm">Método de Pago Simulada</label>
+                                    <select id="metodo-pago" class="form-select form-select-sm">
+                                        <option value="Contraentrega en Efectivo">Contraentrega en Efectivo</option>
+                                        <option value="Transferencia Yape/Plin">Transferencia Yape / Plin</option>
+                                        <option value="Recojo y Pago en Taller">Recoger y pagar en taller físico</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm">Finalizar Pedido vía WhatsApp</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card p-3 shadow-sm border-0 mt-3 bg-white font-sm">
+                        <h4 class="h6 fw-bold text-secondary mb-2">📌 Nuestro Taller Físico</h4>
+                        <p class="mb-1 text-muted"><strong>Dirección:</strong> Calle Odin, Los Olivos 15306, Lima.</p>
+                        <p class="mb-0 text-muted"><strong>Horario:</strong> Lunes a Sábado de 9:00 am a 6:00 pm. Disponible opción de <em>"Recoger en Taller"</em> al procesar tu compra.</p>
+                    </div>
+                </aside>
+            </div>
+        </main>
+
+        <footer class="bg-dark text-white text-center py-3 mt-5 font-sm">
+            <p class="mb-0">&copy; 2026 Sistema de Gestión Dayluz. Curso: Interacción Humano Computador. Proyecto alineado al ODS 10.</p>
+        </footer>
+    </div>
+
+    <div class="modal fade" id="modalDetalleZapato" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white py-2">
+                    <h5 class="modal-title h6 fw-bold" id="modal-zapato-nombre">Detalle</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body font-sm">
+                    <p id="modal-zapato-desc"></p>
+                    <ul class="list-group list-group-flush mb-0">
+                        <li class="list-group-item"><strong>Categoría/Línea:</strong> <span id="modal-zapato-cat"></span></li>
+                        <li class="list-format list-group-item"><strong>Talla del modelo:</strong> <span id="modal-zapato-talla"></span></li>
+                        <li class="list-group-item"><strong>Estado de Disponibilidad:</strong> <span id="modal-zapato-estado" class="badge"></span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/javas.js"></script>
+    <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxWrNb6UUwLrw3wJ4dTdwga0Z1XHgqVxw",
+    authDomain: "bdboticabelen.firebaseapp.com",
+    projectId: "bdboticabelen",
+    storageBucket: "bdboticabelen.firebasestorage.app",
+    messagingSenderId: "162046611426",
+    appId: "1:162046611426:web:30fe881778c5aef37273bb",
+    measurementId: "G-ZXB8CJVYBW"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+</body>
+</html>
