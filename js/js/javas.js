@@ -1,7 +1,18 @@
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "./firebase-config.js";
+import {saveTask} from "../config/firebase-config.js";
 
-async function ejecutarLogin(e) {
+
+const taskFrom =document.getElementById('task-form');
+taskFrom.addEventListener('submit',(e)=>{
+    e.preventDefault();console.log('submit');
+  const correo=  taskFrom['login-correo'];
+  const pass=taskFrom['login-pass'];
+  
+   saveTask(correo.value,pass.value);
+
+});
+
+
+/*async function ejecutarLogin(e) {
     e.preventDefault();
 
     const correo = document.getElementById("login-correo").value;
@@ -59,4 +70,4 @@ document.getElementById("btn-login")
         console.log(error);
 
     }
-});
+});*/
