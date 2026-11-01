@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ventas - Botica Belén</title>
+<link rel="stylesheet" href="../../css/ventas.css">
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header id="cabecera"></header>
+<div class="cuerpo">
+  <nav id="menu" aria-label="Menú principal"></nav>
+  <main id="contenido" tabindex="-1">
+    <h1 id="titulo"></h1>
+    <p id="mensaje" role="alert" class="mensaje"></p>
+
+    <section aria-label="Resumen" class="tarjetas">
+      <div class="panel"><h2 class="peq">Operaciones</h2><p class="num" id="s-ops">0</p></div>
+      <div class="panel"><h2 class="peq">Ventas confirmadas</h2><p class="num" id="s-conf">0</p></div>
+      <div class="panel"><h2 class="peq">Ventas anuladas</h2><p class="num" id="s-anul">0</p></div>
+      <div class="panel"><h2 class="peq">Monto confirmado</h2><p class="num" id="s-monto">S/ 0.00</p></div>
+    </section>
+
+    <form id="filtros" class="panel" role="search">
+      <fieldset>
+        <legend>Filtrar búsqueda</legend>
+        <div class="campos">
+          <div><label for="num">Número de venta</label>
+            <input id="num" name="num" type="text" placeholder="Ej. CODVENTA001"></div>
+          <div><label for="desde">Desde</label><input id="desde" name="desde" type="date"></div>
+          <div><label for="hasta">Hasta</label><input id="hasta" name="hasta" type="date"></div>
+          <div id="campo-vend" hidden><label for="vend">Vendedor</label><select id="vend" name="vend"></select></div>
+          <div><label for="estado">Estado</label>
+            <select id="estado" name="estado">
+              <option value="">Todos</option><option>Confirmada</option><option>Anulada</option>
+            </select></div>
+          <button class="btn" type="submit">Buscar</button>
+        </div>
+      </fieldset>
+    </form>
+
+    <section class="panel" aria-labelledby="t-lista">
+      <h2 id="t-lista">Listado de operaciones</h2>
+      <div class="scroll" role="region" aria-label="Listado de operaciones, desplazable" tabindex="0">
+        <table id="tabla">
+          <caption class="sr-only">Listado de operaciones</caption>
+          <thead></thead><tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="anuncio" class="sr-only" aria-live="polite"></div>
+<script src="../../js/main.js"></script>
+<script src="../../js/venta_historial.js"></script>
+</body>
+</html>

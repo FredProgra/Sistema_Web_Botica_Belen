@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nueva venta - Botica Belén</title>
+<link rel="stylesheet" href="../../css/ventas.css">
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header id="cabecera"></header>
+<div class="cuerpo">
+  <nav id="menu" aria-label="Menú principal"></nav>
+  <main id="contenido" tabindex="-1">
+    <h1>Nueva venta</h1>
+    <p id="mensaje" role="alert" class="mensaje"></p>
+
+    <div class="dos-col">
+      <section class="panel" aria-labelledby="t-cat">
+        <h2 id="t-cat">Buscar y seleccionar productos</h2>
+        <div id="categorias" role="group" aria-label="Categorías"></div>
+
+        <form id="f-buscar" role="search">
+          <label for="q">Buscar por nombre o código</label>
+          <div class="fila">
+            <input id="q" type="search" autocomplete="off">
+            <button class="btn" type="submit">Buscar</button>
+          </div>
+        </form>
+        <p id="estado-busq" aria-live="polite"></p>
+
+        <h3>Productos disponibles</h3>
+        <ul id="catalogo" class="lista"></ul>
+      </section>
+
+      <div>
+        <section class="panel" aria-labelledby="t-res">
+          <h2 id="t-res">Resumen de venta</h2>
+          <div class="campos">
+            <div>
+              <label for="cliente">Cliente</label>
+              <select id="cliente">
+                <option>Regular</option><option>María Torres</option><option>Carlos Díaz</option>
+              </select>
+            </div>
+            <div>
+              <label for="pago">Método de pago</label>
+              <select id="pago">
+                <option>Efectivo</option><option>Yape</option><option>Plin</option><option>Tarjeta</option>
+              </select>
+            </div>
+          </div>
+          <p>Vendedor responsable: <strong id="vendedor"></strong></p>
+          <p>Cant. productos: <strong id="cantprod">0</strong></p>
+          <p>Subtotal: <strong id="subtotal">S/ 0.00</strong></p>
+          <button id="confirmar" class="btn" type="button" aria-disabled="true">Confirmar venta</button>
+        </section>
+
+        <section class="panel" aria-labelledby="t-venta">
+          <h2 id="t-venta" tabindex="-1">Productos de la venta</h2>
+          <div class="scroll" role="region" aria-label="Productos de la venta, desplazable" tabindex="0">
+            <table id="carrito">
+              <caption class="sr-only">Productos de la venta</caption>
+              <thead><tr>
+                <th scope="col">Producto</th><th scope="col">Precio</th>
+                <th scope="col">Cantidad</th><th scope="col">Subtotal</th><th scope="col">Acciones</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="anuncio" class="sr-only" aria-live="polite"></div>
+<script src="../../js/main.js"></script>
+<script src="../../js/venta_registrar.js"></script>
+</body>
+</html>
