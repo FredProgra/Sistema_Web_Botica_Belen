@@ -1,0 +1,707 @@
+/* ============================================================
+   Botica Belén · Administración
+   Hoja de estilos compartida por las pantallas del módulo de
+   proveedores (directorio, detalle y formulario).
+   ============================================================ */
+
+:root {
+  --brand: #0b6b4f;
+  --brand-dark: #084d39;
+  --brand-soft: #e7f3ee;
+  --ink: #1f2933;
+  --muted: #667085;
+  --line: #d9dee3;
+  --line-strong: #b8c0c8;
+  --bg: #f3f5f7;
+  --panel: #ffffff;
+  --danger: #b42318;
+  --warning: #b54708;
+  --success: #067647;
+  --radius: 8px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .05);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--brand); }
+
+/* ------------------------------------------------------------
+   Cabecera
+   ------------------------------------------------------------ */
+
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 74px;
+  padding: .65rem 1.5rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line-strong);
+  box-shadow: var(--shadow);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .8rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand:hover { color: var(--ink); }
+
+.brand-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.brand-plus {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--brand);
+  font-size: .62rem;
+  font-weight: 700;
+}
+
+.brand-name {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  line-height: 1;
+}
+
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+}
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #e4e7ec;
+  color: #344054;
+  font-size: 1.35rem;
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.user-name {
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.user-role {
+  font-size: .78rem;
+  color: var(--muted);
+}
+
+.logout-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-left: .35rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 1.25rem;
+  text-decoration: none;
+}
+
+.logout-btn:hover,
+.logout-btn:focus-visible {
+  background: #f2f4f7;
+  color: var(--danger);
+}
+
+/* ------------------------------------------------------------
+   Estructura general
+   ------------------------------------------------------------ */
+
+.admin-shell {
+  display: flex;
+  align-items: flex-start;
+  min-height: calc(100vh - 74px);
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 74px;
+  flex: 0 0 232px;
+  align-self: stretch;
+  padding: 1.25rem 1rem;
+  background: var(--panel);
+  border-right: 1px solid var(--line-strong);
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .78rem 1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  font-size: .95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color .12s ease, border-color .12s ease, color .12s ease;
+}
+
+.admin-nav-link:hover {
+  background: #f2f4f5;
+  border-color: #98a2b3;
+  color: var(--ink);
+}
+
+.admin-nav-link.active {
+  background: #495057;
+  border-color: #495057;
+  color: #fff;
+}
+
+.admin-nav-link.active:hover {
+  background: #3f464c;
+  border-color: #3f464c;
+  color: #fff;
+}
+
+.admin-nav-link .caret {
+  margin-left: auto;
+  font-size: .7rem;
+  opacity: .75;
+}
+
+.admin-nav-link[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: .62;
+}
+
+.admin-nav-link[aria-disabled="true"]:hover {
+  background: #fff;
+  border-color: var(--line-strong);
+}
+
+.admin-nav-link.active[aria-disabled="true"] {
+  opacity: 1;
+}
+
+.admin-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  max-width: 1440px;
+  padding: 1.75rem 2rem 3rem;
+}
+
+/* ------------------------------------------------------------
+   Encabezado de página
+   ------------------------------------------------------------ */
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .9rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: .8rem;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+/* ------------------------------------------------------------
+   Paneles
+   ------------------------------------------------------------ */
+
+.panel {
+  padding: 1.25rem 1.5rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: 1rem;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.panel-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+/* ------------------------------------------------------------
+   Tarjetas KPI
+   ------------------------------------------------------------ */
+
+.kpi-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 100%;
+  padding: 1rem 1.25rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.kpi-label {
+  color: var(--ink);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.kpi-value {
+  margin-top: .15rem;
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #eef0f3;
+  color: #98a2b3;
+  font-size: 1.55rem;
+}
+
+.kpi-card-activos .kpi-icon {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.kpi-card-inactivos .kpi-icon {
+  background: #eaecf0;
+  color: #667085;
+}
+
+/* ------------------------------------------------------------
+   Filtros
+   ------------------------------------------------------------ */
+
+.filters-panel .form-label {
+  margin-bottom: .3rem;
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.filters-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-buscar {
+  min-width: 120px;
+}
+
+/* ------------------------------------------------------------
+   Tablas
+   ------------------------------------------------------------ */
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.admin-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: .92rem;
+}
+
+.admin-table thead th {
+  padding: .7rem .75rem;
+  background: #eef0f3;
+  border-bottom: 1px solid var(--line-strong);
+  color: #475467;
+  font-size: .73rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-table tbody td {
+  padding: .7rem .75rem;
+  border-bottom: 1px solid #eaecf0;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td { border-bottom: 0; }
+
+.admin-table tbody tr:hover { background: #f9fafb; }
+
+.admin-table .cell-main {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-table .cell-money {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.admin-table .cell-actions {
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.table-empty {
+  padding: 2.5rem 1rem !important;
+  color: var(--muted);
+  text-align: center;
+}
+
+.table-empty i {
+  display: block;
+  margin-bottom: .4rem;
+  font-size: 1.7rem;
+  opacity: .55;
+}
+
+/* ------------------------------------------------------------
+   Insignias de estado y pago
+   ------------------------------------------------------------ */
+
+.badge-estado,
+.badge-pago {
+  display: inline-block;
+  padding: .32rem .85rem;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.badge-estado.activo {
+  background: #d1fadf;
+  color: #05603a;
+}
+
+.badge-estado.inactivo {
+  background: #eaecf0;
+  color: #475467;
+}
+
+.badge-estado.secundario {
+  background: #eaecf0;
+  color: #475467;
+}
+
+.badge-pago.pagado {
+  background: #d1fadf;
+  color: #05603a;
+}
+
+.badge-pago.pendiente {
+  background: #fef0c7;
+  color: #93370d;
+}
+
+.badge-pago.vencido {
+  background: #fee4e2;
+  color: #912018;
+}
+
+.badge-pago.otro {
+  background: #eaecf0;
+  color: #475467;
+}
+
+/* ------------------------------------------------------------
+   Ficha de detalle
+   ------------------------------------------------------------ */
+
+.detalle-panel {
+  position: relative;
+}
+
+.detalle-estado {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.25rem;
+}
+
+.detalle-lista {
+  margin: 0;
+}
+
+.detalle-lista dt {
+  margin-bottom: .1rem;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.detalle-lista dd {
+  margin-bottom: .9rem;
+  font-size: .98rem;
+  overflow-wrap: anywhere;
+}
+
+.detalle-lista dd:last-child { margin-bottom: 0; }
+
+.detalle-meta {
+  margin: 1rem 0 0;
+  padding-top: .85rem;
+  border-top: 1px solid #eaecf0;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+.detalle-meta strong { color: var(--ink); }
+
+/* ------------------------------------------------------------
+   Formularios
+   ------------------------------------------------------------ */
+
+.admin-form .form-label {
+  margin-bottom: .3rem;
+  font-size: .84rem;
+  font-weight: 600;
+}
+
+.admin-form .form-control,
+.admin-form .form-select {
+  min-height: 42px;
+}
+
+.admin-form .form-text {
+  font-size: .76rem;
+}
+
+.admin-form .form-control[readonly] {
+  background: #f2f4f7;
+}
+
+.required-mark { color: var(--danger); }
+
+.form-actions {
+  display: grid;
+  gap: .55rem;
+}
+
+.form-actions .btn { width: 100%; }
+
+.registrado-por {
+  margin: 0 0 .9rem;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+/* ------------------------------------------------------------
+   Botones de marca
+   ------------------------------------------------------------ */
+
+.btn-brand {
+  --bs-btn-bg: var(--brand);
+  --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-bg: var(--brand-dark);
+  --bs-btn-hover-border-color: var(--brand-dark);
+  --bs-btn-active-bg: var(--brand-dark);
+  --bs-btn-active-border-color: var(--brand-dark);
+  --bs-btn-disabled-bg: var(--brand);
+  --bs-btn-disabled-border-color: var(--brand);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-brand:hover,
+.btn-brand:focus,
+.btn-brand:active {
+  color: #fff;
+}
+
+.btn-outline-dark {
+  --bs-btn-color: var(--ink);
+  --bs-btn-border-color: #98a2b3;
+  --bs-btn-hover-bg: #1f2933;
+  --bs-btn-hover-border-color: #1f2933;
+}
+
+/* ------------------------------------------------------------
+   Estados vacíos / avisos
+   ------------------------------------------------------------ */
+
+.empty-state {
+  padding: 2.5rem 1rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-state i {
+  display: block;
+  margin-bottom: .5rem;
+  font-size: 2rem;
+  opacity: .5;
+}
+
+.empty-state p { margin: 0; }
+
+.loading-row {
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------
+   Utilidades
+   ------------------------------------------------------------ */
+
+.text-muted-sm {
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------ */
+
+@media (max-width: 1199.98px) {
+  .admin-content { padding: 1.5rem 1.25rem 2.5rem; }
+}
+
+@media (max-width: 991.98px) {
+  .admin-header { padding: .6rem 1rem; }
+
+  .admin-shell {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    position: static;
+    flex-basis: auto;
+    width: 100%;
+    padding: .75rem 1rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .admin-nav {
+    flex-direction: row;
+    gap: .5rem;
+    overflow-x: auto;
+    padding-bottom: .25rem;
+    scrollbar-width: thin;
+  }
+
+  .admin-nav-link {
+    flex: 0 0 auto;
+    padding: .6rem .85rem;
+    white-space: nowrap;
+  }
+
+  .admin-content { padding: 1.25rem 1rem 2.5rem; }
+
+  .detalle-estado {
+    position: static;
+    display: inline-block;
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .brand-name { font-size: 1.1rem; }
+  .brand-icon { width: 40px; height: 40px; font-size: 1.35rem; }
+  .user-meta { display: none; }
+  .page-title { font-size: 1.35rem; }
+  .kpi-value { font-size: 2.2rem; }
+  .panel { padding: 1rem; }
+  .filters-actions { justify-content: stretch; }
+  .filters-actions .btn { width: 100%; }
+}
