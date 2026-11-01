@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Botica Belén | Gestión e Inventario</title>
+  <link rel="stylesheet" href="../css/style2.css">
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="#" onclick="mostrarSeccion('inicio'); return false;">
+      <img src="../img/Botica_belen.png" alt="Logo de Botica Belén">
+    </a>
+    <div class="header-user">
+      <span class="user-avatar">●</span>
+      <span>Administrador</span>
+      <span class="chevron">▾</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <p class="menu-caption">MENÚ PRINCIPAL</p>
+      <button class="menu-item active" data-section="inicio" onclick="mostrarSeccion('inicio')"><span>⌂</span> Inicio</button>
+      <button class="menu-item active" data-section="ventas" onclick="mostrarSeccion('ventas')"><span>⌂</span> Ventas</button>
+      <button class="menu-item" data-section="inventario" onclick="mostrarSeccion('inventario')"><span>▦</span> Inventario</button>
+      <button class="menu-item active" data-section="productos" onclick="mostrarSeccion('productos')"><span>⌂</span> Productos</button>
+      <button class="menu-item active" data-section="clientes" onclick="mostrarSeccion('clientes')"><span>⌂</span> Clientes</button>
+      <button class="menu-item active" data-section="proveedores" onclick="mostrarSeccion('proveedores')"><span>⌂</span> Proveedores</button>
+      <button class="menu-item" data-section="usuarios" onclick="mostrarSeccion('usuarios')"><span>♙</span> Usuarios</button>
+      <button class="menu-item active" data-section="reportes" onclick="mostrarSeccion('reportes')"><span>⌂</span> Reportes</button>
+
+      <div class="sidebar-note">
+        <span class="note-dot"></span>
+        Sistema de gestión
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <section id="inicio" class="section">
+        <div class="welcome-banner">
+          <div>
+            <p class="eyebrow">BOTICA BELÉN</p>
+            <h1>Bienvenido al sistema</h1>
+            <p>Administra tus productos, inventario y usuarios desde un solo lugar.</p>
+          </div>
+          <div class="banner-mark">✚</div>
+        </div>
+        <div class="summary-grid">
+          <article class="summary-card blue-card">
+            <div class="summary-icon">▦</div>
+            <div><p>Productos registrados</p><strong id="totalProductos">0</strong></div>
+            <button onclick="mostrarSeccion('inventario')">Ver inventario →</button>
+          </article>
+          <article class="summary-card red-card">
+            <div class="summary-icon">♙</div>
+            <div><p>Usuarios registrados</p><strong id="totalUsuarios">0</strong></div>
+            <button onclick="mostrarSeccion('usuarios')">Ver usuarios →</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="inventario" class="section hidden">
+        <div class="page-heading">
+          <div><p class="eyebrow">CONTROL DE PRODUCTOS</p><h1>Inventario de productos</h1><p class="subtitle">Registra y administra los productos de la Botica Belén.</p></div>
+          <button class="primary-button" onclick="abrirModalProducto()">＋ Nuevo producto</button>
+        </div>
+        <div class="toolbar">
+          <input id="buscarProducto" type="search" placeholder="⌕  Buscar por código o producto..." oninput="filtrarProductos()">
+          <select id="categoriaFiltro" onchange="filtrarProductos()">
+            <option value="">Todas las categorías</option>
+            <option>Medicamentos</option><option>Higiene</option><option>Vitaminas</option><option>Cuidado personal</option>
+          </select>
+        </div>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Precio venta</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody id="tablaProductos"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="usuarios" class="section hidden">
+        <div class="page-heading">
+          <div><p class="eyebrow">ADMINISTRACIÓN DEL SISTEMA</p><h1>Gestión de usuarios</h1><p class="subtitle">Administra los accesos y roles del personal.</p></div>
+          <button class="primary-button" onclick="abrirModalUsuario()">＋ Nuevo usuario</button>
+        </div>
+        <div class="toolbar single-toolbar">
+          <input id="buscarUsuario" type="search" placeholder="⌕  Buscar por nombre, usuario o rol..." oninput="filtrarUsuarios()">
+        </div>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody id="tablaUsuarios"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal producto -->
+  <div id="modalProducto" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-heading"><div><p class="eyebrow">INVENTARIO</p><h2 id="tituloModalProducto">Nuevo producto</h2></div><button class="close-button" type="button" onclick="cerrarModalProducto()">×</button></div>
+      <form id="formProducto">
+        <input type="hidden" id="indiceProducto">
+        <label for="codigo">Código</label><input id="codigo" required maxlength="20" placeholder="Ej. P009">
+        <label for="nombreProducto">Nombre del producto</label><input id="nombreProducto" required maxlength="100" placeholder="Nombre del producto">
+        <label for="categoria">Categoría</label><select id="categoria" required><option value="">Seleccionar categoría</option><option>Medicamentos</option><option>Higiene</option><option>Vitaminas</option><option>Cuidado personal</option></select>
+        <div class="form-row"><div><label for="stock">Stock</label><input id="stock" type="number" min="0" step="1" required></div><div><label for="precio">Precio de venta (S/.)</label><input id="precio" type="number" min="0" step="0.01" required></div></div>
+        <label for="estadoProducto">Estado</label><select id="estadoProducto"><option>Activo</option><option>Inactivo</option></select>
+        <div class="modal-actions"><button type="button" class="secondary-button" onclick="cerrarModalProducto()">Cancelar</button><button class="primary-button" type="submit">Guardar producto</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal usuario -->
+  <div id="modalUsuario" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-heading"><div><p class="eyebrow">USUARIOS</p><h2 id="tituloModalUsuario">Nuevo usuario</h2></div><button class="close-button" type="button" onclick="cerrarModalUsuario()">×</button></div>
+      <form id="formUsuario">
+        <input type="hidden" id="indiceUsuario">
+        <label for="nombreUsuario">Nombre completo</label><input id="nombreUsuario" required maxlength="100" placeholder="Nombre completo">
+        <label for="username">Nombre de usuario</label><input id="username" required maxlength="40" placeholder="Ej. jlopez">
+        <label for="rol">Rol</label><select id="rol" required><option value="">Seleccionar rol</option><option>Administrador</option><option>Vendedor</option></select>
+        <label for="estadoUsuario">Estado</label><select id="estadoUsuario"><option>Activo</option><option>Inactivo</option></select>
+        <div class="modal-actions"><button type="button" class="secondary-button" onclick="cerrarModalUsuario()">Cancelar</button><button class="primary-button" type="submit">Guardar usuario</button></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/js/java2.js"></script>
+</body>
+</html>
