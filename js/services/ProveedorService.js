@@ -1,8 +1,8 @@
-import { db, functions } from "../config/firebase-config.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
-import { httpsCallable } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js";
-import { validarCorreo, validarRuc } from "../utils/validaciones.js";
+import { db } from "../config/firebase-config.js?v=2.0.0-spark";
+import { collection, doc, getDocs, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+import { validarCorreo, validarRuc } from "../utils/validaciones.js?v=2.0.0-spark";
+import { claveUnica, errorDominio } from "../domain/operaciones.js?v=2.0.0-spark";
 export class ProveedorService {
   async listar(){const s=await getDocs(collection(db,"proveedor"));return s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.razonSocial).localeCompare(String(b.razonSocial),"es"));}
-  async guardar(d,id=null){const datos={tipo:"proveedor",id,ruc:validarRuc(d.ruc),razonSocial:String(d.nombre||"").trim(),telefono:String(d.telefono||"").trim(),correo:validarCorreo(d.correo),direccion:String(d.direccion||"").trim(),estado:d.estado};if(!datos.razonSocial||!datos.telefono||!datos.direccion)throw new Error("Complete los datos obligatorios del proveedor.");return(await httpsCallable(functions,"guardarEntidad")(datos)).data.id;}
+  async guardar(d,id=null){const datos={ruc:validarRuc(d.ruc),razonSocial:String(d.nombre||"").trim(),nombre:String(d.nombre||"").trim(),telefono:String(d.telefono||"").trim(),correo:validarCorreo(d.correo),direccion:String(d.direccion||"").trim(),estado:d.estado};if(!datos.razonSocial||!datos.telefono||!datos.direccion||!["Activo","Inactivo"].includes(datos.estado))throw errorDominio("invalid-argument","Complete los datos obligatorios del proveedor.");const ref=id?doc(db,"proveedor",id):doc(collection(db,"proveedor")),reservaRef=doc(db,"unicos",claveUnica("proveedor",datos.ruc));await runTransaction(db,async tx=>{const actual=id?await tx.get(ref):null,reserva=await tx.get(reservaRef);if(reserva.exists()&&reserva.data().id!==ref.id)throw errorDominio("already-exists","El RUC ya está registrado.");if(id&&!actual.exists())throw errorDominio("not-found","Proveedor inexistente.");if(actual?.exists()&&actual.data().ruc!==datos.ruc)tx.delete(doc(db,"unicos",claveUnica("proveedor",actual.data().ruc)));tx.set(ref,{...datos,fechaActualizacion:serverTimestamp()},{merge:true});tx.set(reservaRef,{tipo:"proveedor",valor:datos.ruc,id:ref.id});});return ref.id;}
 }

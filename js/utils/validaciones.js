@@ -6,6 +6,10 @@ export const validarCorreo = valor => { const correo = requerido(valor, "El corr
 export function validarProducto(d = {}) {
   const producto = { codigo: requerido(d.codigo, "El código").toUpperCase(), nombre: requerido(d.nombre, "El nombre"), categoria: requerido(d.categoria, "La categoría"), precioCompra: numero(d.precioCompra, "El precio de compra"), precio: numero(d.precio, "El precio de venta", 0.01), stock: numero(d.stock, "El stock"), stockMinimo: numero(d.stockMinimo, "El stock mínimo"), lote: String(d.lote || "").trim(), fechaVencimiento: d.fechaVencimiento || null, estado: d.estado === "Inactivo" ? "Inactivo" : "Activo" };
   if (!Number.isInteger(producto.stock) || !Number.isInteger(producto.stockMinimo)) throw new Error("El stock debe expresarse en unidades enteras.");
-  if (producto.fechaVencimiento && Number.isNaN(Date.parse(producto.fechaVencimiento))) throw new Error("La fecha de vencimiento no es válida.");
+  if (producto.fechaVencimiento) {
+    const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(producto.fechaVencimiento);
+    const fecha = partes && new Date(Date.UTC(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3])));
+    if (!partes || fecha.getUTCFullYear() !== Number(partes[1]) || fecha.getUTCMonth() !== Number(partes[2]) - 1 || fecha.getUTCDate() !== Number(partes[3])) throw new Error("La fecha de vencimiento no es válida.");
+  }
   return producto;
 }

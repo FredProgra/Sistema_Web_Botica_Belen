@@ -2,37 +2,5 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
-  },
-  "functions": { "source": "functions" },
-  "hosting": {
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      "LEEME.md",
-      "package.json",
-      "pnpm-lock.yaml",
-      "servidor_web.py",
-      "firestore.rules",
-      "firestore.indexes.json",
-      "functions/**",
-      "Manual_Botica_Belen.docx",
-      "Manual_Botica_Belen.pdf",
-      "README.md",
-      "docs/**",
-      "**/.*",
-      "**/node_modules/**",
-      "documentacion/**",
-      "evidencias/**",
-      "GUIA_INTEGRACION.md",
-      "ESTADO_FIREBASE.md"
-    ],
-    "redirects": [
-      {
-        "source": "/",
-        "destination": "/pages/login",
-        "type": 302
-      }
-    ],
-    "cleanUrls": true
   }
 }

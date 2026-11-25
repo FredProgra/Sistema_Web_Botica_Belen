@@ -1,6 +1,6 @@
-import { auth, authReady, db } from "../config/firebase-config.js";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { auth, authReady, db } from "../config/firebase-config.js?v=2.0.0-spark";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 export class AuthService {
   async iniciarSesion(correo, password) {
@@ -21,9 +21,11 @@ export class AuthService {
     const perfilSnap = await getDoc(doc(db, "usuario", user.uid));
     if (!perfilSnap.exists()) throw new Error("La cuenta no tiene un perfil autorizado.");
     const perfil = perfilSnap.data();
-    if (perfil.estado !== "Activo") throw new Error("La cuenta está inactiva. Comuníquese con el administrador.");
-    if (!["Administrador", "Vendedor"].includes(perfil.rol)) throw new Error("El perfil no tiene un rol válido.");
-    return { id: user.uid, correo: user.email, nombre: perfil.nombre, username: perfil.username || "", rol: perfil.rol, estado: perfil.estado };
+    const estado = String(perfil.estado || "").toLowerCase();
+    const rol = String(perfil.rol || "").toLowerCase();
+    if (estado !== "activo") throw new Error("La cuenta está inactiva. Comuníquese con el administrador.");
+    if (!["administrador", "vendedor"].includes(rol)) throw new Error("El perfil no tiene un rol válido.");
+    return { id: user.uid, correo: user.email, nombre: perfil.nombre, username: perfil.username || "", rol: rol === "administrador" ? "Administrador" : "Vendedor", estado: "Activo" };
   }
 
   observarSesion(callback) {

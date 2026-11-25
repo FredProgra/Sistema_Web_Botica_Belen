@@ -3,43 +3,130 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function profile() { return get(/databases/$(database)/documents/usuario/$(request.auth.uid)).data; }
-    function active() { return signedIn() && profile().estado == 'Activo'; }
-    function admin() { return active() && profile().rol == 'Administrador'; }
-    function seller() { return active() && profile().rol == 'Vendedor'; }
-    function validState(data) { return data.estado in ['Activo', 'Inactivo']; }
+    function active() { return signedIn() && profile().estado.lower() == 'activo' && profile().rol.lower() in ['administrador','vendedor']; }
+    function admin() { return active() && profile().rol.lower() == 'administrador'; }
+    function validState(value) { return value in ['Activo','Inactivo']; }
+    function validRole(value) { return value in ['Administrador','Vendedor']; }
+    function productValid(data) {
+      return data.keys().hasAll(['codigo','nombre','categoria','precio','precioCompra','stock','stockMinimo','estado'])
+        && data.codigo is string && data.codigo.size() > 0
+        && data.nombre is string && data.nombre.size() > 0
+        && data.categoria is string && data.categoria.size() > 0
+        && data.precio is number && data.precio > 0
+        && data.precioCompra is number && data.precioCompra >= 0
+        && data.stock is int && data.stock >= 0
+        && data.stockMinimo is int && data.stockMinimo >= 0
+        && validState(data.estado);
+    }
+    function movementAfter(productId, operationId) {
+      return getAfter(/databases/$(database)/documents/movimientos/$(operationId + '_' + productId));
+    }
+    function validInventoryMovement(productId) {
+      let operationId = request.resource.data.ultimaOperacion;
+      let movement = movementAfter(productId, operationId).data;
+      return active()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock','fechaActualizacion','ultimaOperacion','version'])
+        && request.resource.data.stock is int && request.resource.data.stock >= 0
+        && request.resource.data.version == int(resource.data.get('version', 0)) + 1
+        && movement.productoId == productId && movement.operacionId == operationId
+        && movement.vendedorId == request.auth.uid && movement.cantidad is int && movement.cantidad > 0
+        && movement.stockAnterior == resource.data.stock && movement.stockNuevo == request.resource.data.stock
+        && ((movement.tipo == 'venta'
+              && request.resource.data.stock == resource.data.stock - movement.cantidad
+              && movement.precioUnitario == resource.data.precio
+              && movement.subtotal == movement.precioUnitario * movement.cantidad
+              && getAfter(/databases/$(database)/documents/ventas/$(operationId)).data.vendedorId == request.auth.uid
+              && getAfter(/databases/$(database)/documents/ventas/$(operationId)).data.estado == 'Confirmada')
+            || (movement.tipo == 'anulacion'
+              && admin()
+              && request.resource.data.stock == resource.data.stock + movement.cantidad
+              && getAfter(/databases/$(database)/documents/ventas/$(movement.ventaId)).data.estado == 'Anulada'));
+    }
 
     match /usuario/{uid} {
-      allow read: if active() && (admin() || request.auth.uid == uid);
-      allow write: if false; // Solo Cloud Function con Admin SDK.
+      allow read: if active() && (request.auth.uid == uid || admin());
+      allow create: if admin()
+        && request.resource.data.keys().hasAll(['nombre','username','correo','rol','estado'])
+        && validRole(request.resource.data.rol) && validState(request.resource.data.estado);
+      allow update: if admin()
+        && request.resource.data.keys().hasAll(['nombre','username','correo','rol','estado'])
+        && validRole(request.resource.data.rol) && validState(request.resource.data.estado)
+        && (uid != request.auth.uid || (request.resource.data.rol == 'Administrador' && request.resource.data.estado == 'Activo'));
+      allow delete: if false;
+    }
+
+    match /unicos/{id} {
+      allow read: if active();
+      allow create, update: if active() && request.resource.data.keys().hasOnly(['tipo','valor','id'])
+        && request.resource.data.tipo in ['producto','cliente','proveedor','usuario']
+        && request.resource.data.valor is string && request.resource.data.valor.size() > 0
+        && request.resource.data.id is string && request.resource.data.id.size() > 0
+        && (request.resource.data.tipo == 'cliente' || admin());
+      allow delete: if active() && (resource.data.tipo == 'cliente' || admin());
     }
 
     match /producto/{id} {
       allow read: if active();
-      allow create, update: if false; // Cloud Function valida unicidad y campos.
+      allow create: if admin() && productValid(request.resource.data);
+      allow update: if (admin() && productValid(request.resource.data)) || validInventoryMovement(id);
       allow delete: if false;
     }
 
     match /cliente/{id} {
       allow read: if active();
-      allow create, update: if false;
+      allow create, update: if active()
+        && request.resource.data.keys().hasAll(['dni','nombre','apellido','telefono','direccion','estado'])
+        && request.resource.data.dni.matches('^[0-9]{8}$') && validState(request.resource.data.estado);
       allow delete: if false;
     }
 
     match /proveedor/{id} {
       allow read: if admin();
-      allow create, update: if false;
+      allow create, update: if admin()
+        && request.resource.data.keys().hasAll(['ruc','razonSocial','telefono','correo','direccion','estado'])
+        && request.resource.data.ruc.matches('^[0-9]{11}$') && validState(request.resource.data.estado);
       allow delete: if false;
     }
 
     match /ventas/{id} {
       allow read: if active();
-      allow write: if false; // Registro y anulación atómicos mediante Cloud Functions.
+      allow create: if active()
+        && request.resource.data.keys().hasAll(['codigo','items','total','metodoPago','huella','vendedorId','vendedor','estado','fecha'])
+        && request.resource.data.vendedorId == request.auth.uid
+        && request.resource.data.estado == 'Confirmada'
+        && request.resource.data.metodoPago in ['Efectivo','Yape / Plin','Tarjeta']
+        && request.resource.data.items is list && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 100
+        && request.resource.data.total is number && request.resource.data.total > 0
+        && request.resource.data.fecha == request.time;
+      allow update: if admin() && resource.data.estado == 'Confirmada' && request.resource.data.estado == 'Anulada'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado','motivoAnulacion','anuladoPorId','anuladoPor','fechaAnulacion'])
+        && request.resource.data.motivoAnulacion is string && request.resource.data.motivoAnulacion.size() >= 5
+        && request.resource.data.anuladoPorId == request.auth.uid && request.resource.data.fechaAnulacion == request.time;
+      allow delete: if false;
+    }
+
+    match /movimientos/{id} {
+      allow read: if admin();
+      allow create: if active() && request.resource.data.vendedorId == request.auth.uid
+        && request.resource.data.tipo in ['venta','anulacion']
+        && request.resource.data.cantidad is int && request.resource.data.cantidad > 0
+        && request.resource.data.stockAnterior is int && request.resource.data.stockNuevo is int
+        && getAfter(/databases/$(database)/documents/producto/$(request.resource.data.productoId)).data.ultimaOperacion == request.resource.data.operacionId
+        && request.resource.data.fecha == request.time;
+      allow update, delete: if false;
     }
 
     match /alertas/{id} {
       allow read: if active();
-      allow update: if admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida','fechaLectura']);
-      allow create, delete: if false;
+      allow create, update: if active()
+        && request.resource.data.productoId == id
+        && request.resource.data.stock == getAfter(/databases/$(database)/documents/producto/$(id)).data.stock
+        && request.resource.data.stockMinimo == int(getAfter(/databases/$(database)/documents/producto/$(id)).data.get('stockMinimo', 0))
+        && request.resource.data.estado in ['Pendiente','Resuelta'];
+      allow update: if admin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida','fechaLectura'])
+        && request.resource.data.leida == true && request.resource.data.fechaLectura == request.time;
+      allow delete: if false;
     }
   }
 }

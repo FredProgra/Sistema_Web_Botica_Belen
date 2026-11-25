@@ -1,21 +1,19 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
-import { getFunctions } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyA7IMygTmmcHnPBYmWJ8pUQ6VWQ1fp2lFw",
-  authDomain: "boticabelenbd.firebaseapp.com",
-  projectId: "boticabelenbd",
-  storageBucket: "boticabelenbd.firebasestorage.app",
-  messagingSenderId: "166852178480",
-  appId: "1:166852178480:web:7446fc1598fa219613f3f5",
-  measurementId: "G-JVEMC2PV3N"
+  apiKey: "AIzaSyAiiNmZO-ZUFnuOvU2HjVLSGpBeTZJc--A",
+  authDomain: "botica-belen.firebaseapp.com",
+  projectId: "botica-belen",
+  storageBucket: "botica-belen.firebasestorage.app",
+  messagingSenderId: "968310537482",
+  appId: "1:968310537482:web:a11c5825737d1cdc4d4ef3",
+  measurementId: "G-DF3WCLPCY2"
 };
 
 const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const functions = getFunctions(app, "us-central1");
 export const authReady = setPersistence(auth, browserLocalPersistence);

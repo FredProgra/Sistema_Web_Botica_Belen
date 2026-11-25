@@ -1,4 +1,4 @@
-import { AuthService } from "../services/AuthService.js";
+import { AuthService } from "../services/AuthService.js?v=2.0.0-spark";
 const authService = new AuthService();
 const form = document.getElementById("task-form");
 const alerta = document.getElementById("login-alerta");
@@ -9,4 +9,4 @@ form?.addEventListener("submit", async event => {
   catch (error) { alerta.textContent = mensajeAutenticacion(error); alerta.classList.remove("d-none"); document.getElementById("login-correo").focus(); }
   finally { boton.disabled = false; boton.textContent = "Iniciar sesión"; }
 });
-function mensajeAutenticacion(error) { const mapa = { "auth/invalid-credential":"Correo o contraseña incorrectos.", "auth/user-not-found":"Correo o contraseña incorrectos.", "auth/wrong-password":"Correo o contraseña incorrectos.", "auth/network-request-failed":"No se pudo conectar con el servicio. Verifique internet e inténtelo nuevamente.", "auth/too-many-requests":"Demasiados intentos. Espere unos minutos.", "auth/configuration-not-found":"El inicio de sesión todavía no está habilitado. Comuníquese con el administrador del sistema.", "auth/operation-not-allowed":"El acceso con correo y contraseña todavía no está habilitado." }; return mapa[error.code] || "No fue posible iniciar sesión. Verifique sus datos e inténtelo nuevamente."; }
+function mensajeAutenticacion(error) { const mapa = { "auth/invalid-credential":"Correo o contraseña incorrectos.", "auth/user-not-found":"Correo o contraseña incorrectos.", "auth/wrong-password":"Correo o contraseña incorrectos.", "auth/network-request-failed":"No se pudo conectar con el servicio. Verifique internet e inténtelo nuevamente.", "auth/too-many-requests":"Demasiados intentos. Espere unos minutos.", "auth/configuration-not-found":"El servicio de acceso no está disponible. Comuníquese con el administrador.", "auth/operation-not-allowed":"El servicio de acceso no está disponible. Comuníquese con el administrador." }; return mapa[error.code] || "No fue posible iniciar sesión. Verifique sus datos e inténtelo nuevamente."; }

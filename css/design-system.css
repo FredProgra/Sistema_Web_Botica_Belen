@@ -53,3 +53,10 @@ body { background: var(--bg); color: var(--ink); }
   .admin-nav-link { white-space: nowrap; }
   .page-head { align-items: flex-start; }
 }
+
+/* Conservar las dimensiones de los formularios por encima de los estilos de Bootstrap. */
+.modal .modal-content { width: min(100%, 560px); max-height: 90vh; overflow-y: auto; }
+#modalProducto .modal-content, #modalVenta .modal-content { width: min(100%, 760px); }
+@media (max-width: 760px) { .modal .modal-content { max-height: 92vh; } }
+
+#estadoGrafico:not([hidden]) + .chart-container { display: none; }

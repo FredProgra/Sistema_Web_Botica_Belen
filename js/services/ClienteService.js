@@ -1,8 +1,8 @@
-import { db, functions } from "../config/firebase-config.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
-import { httpsCallable } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js";
-import { validarDni } from "../utils/validaciones.js";
+import { db } from "../config/firebase-config.js?v=2.0.0-spark";
+import { collection, doc, getDocs, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+import { validarDni } from "../utils/validaciones.js?v=2.0.0-spark";
+import { claveUnica, errorDominio } from "../domain/operaciones.js?v=2.0.0-spark";
 export class ClienteService {
   async listar(){const s=await getDocs(collection(db,"cliente"));return s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.apellido).localeCompare(String(b.apellido),"es"));}
-  async guardar(d,id=null){const datos={tipo:"cliente",id,dni:validarDni(d.dni),nombre:String(d.nombre||"").trim(),apellido:String(d.apellido||"").trim(),telefono:String(d.telefono||"").trim(),direccion:String(d.direccion||"").trim(),estado:d.estado};if(!datos.nombre||!datos.apellido||!datos.telefono||!datos.direccion)throw new Error("Complete los datos obligatorios del cliente.");return(await httpsCallable(functions,"guardarEntidad")(datos)).data.id;}
+  async guardar(d,id=null){const datos={dni:validarDni(d.dni),nombre:String(d.nombre||"").trim(),apellido:String(d.apellido||"").trim(),telefono:String(d.telefono||"").trim(),direccion:String(d.direccion||"").trim(),estado:d.estado};if(!datos.nombre||!datos.apellido||!datos.telefono||!datos.direccion||!["Activo","Inactivo"].includes(datos.estado))throw errorDominio("invalid-argument","Complete los datos obligatorios del cliente.");const ref=id?doc(db,"cliente",id):doc(collection(db,"cliente")),reservaRef=doc(db,"unicos",claveUnica("cliente",datos.dni));await runTransaction(db,async tx=>{const actual=id?await tx.get(ref):null,reserva=await tx.get(reservaRef);if(reserva.exists()&&reserva.data().id!==ref.id)throw errorDominio("already-exists","El DNI ya está registrado.");if(id&&!actual.exists())throw errorDominio("not-found","Cliente inexistente.");if(actual?.exists()&&actual.data().dni!==datos.dni)tx.delete(doc(db,"unicos",claveUnica("cliente",actual.data().dni)));tx.set(ref,{...datos,fechaActualizacion:serverTimestamp()},{merge:true});tx.set(reservaRef,{tipo:"cliente",valor:datos.dni,id:ref.id});});return ref.id;}
 }
