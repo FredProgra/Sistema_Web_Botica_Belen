@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/usuario/$(request.auth.uid)).data; }
+    function active() { return signedIn() && profile().estado == 'Activo'; }
+    function admin() { return active() && profile().rol == 'Administrador'; }
+    function seller() { return active() && profile().rol == 'Vendedor'; }
+    function validState(data) { return data.estado in ['Activo', 'Inactivo']; }
+
+    match /usuario/{uid} {
+      allow read: if active() && (admin() || request.auth.uid == uid);
+      allow write: if false; // Solo Cloud Function con Admin SDK.
+    }
+
+    match /producto/{id} {
+      allow read: if active();
+      allow create, update: if false; // Cloud Function valida unicidad y campos.
+      allow delete: if false;
+    }
+
+    match /cliente/{id} {
+      allow read: if active();
+      allow create, update: if false;
+      allow delete: if false;
+    }
+
+    match /proveedor/{id} {
+      allow read: if admin();
+      allow create, update: if false;
+      allow delete: if false;
+    }
+
+    match /ventas/{id} {
+      allow read: if active();
+      allow write: if false; // Registro y anulación atómicos mediante Cloud Functions.
+    }
+
+    match /alertas/{id} {
+      allow read: if active();
+      allow update: if admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida','fechaLectura']);
+      allow create, delete: if false;
+    }
+  }
+}

@@ -63,15 +63,6 @@
     font-size: 0.75rem;
     font-weight: bold;
 }
-.eje-x-simulado {
-    position: absolute;
-    bottom: -25px;
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
-    font-size: 0.75rem;
-}
-
 /* Reglas de Accesibilidad - Alto Contraste */
 .alto-contraste {
     background-color: #121212 !important;

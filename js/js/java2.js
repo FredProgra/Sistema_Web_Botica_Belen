@@ -1,260 +1,76 @@
-const PRODUCTOS_INICIALES = [
-  { codigo: "P001", nombre: "Paracetamol", categoria: "Medicamentos", stock: 50, precio: 2.50, estado: "Activo" },
-  { codigo: "P002", nombre: "Amoxicilina", categoria: "Medicamentos", stock: 35, precio: 4.50, estado: "Activo" },
-  { codigo: "P003", nombre: "Ibuprofeno", categoria: "Medicamentos", stock: 40, precio: 3.00, estado: "Activo" },
-  { codigo: "P004", nombre: "Loratadina", categoria: "Medicamentos", stock: 25, precio: 2.80, estado: "Activo" },
-  { codigo: "P005", nombre: "Omeprazol", categoria: "Medicamentos", stock: 30, precio: 3.50, estado: "Activo" },
-  { codigo: "P006", nombre: "Cetirizina", categoria: "Medicamentos", stock: 20, precio: 2.50, estado: "Activo" },
-  { codigo: "P007", nombre: "Prednisona", categoria: "Medicamentos", stock: 15, precio: 3.80, estado: "Activo" },
-  { codigo: "P008", nombre: "Dexametasona", categoria: "Medicamentos", stock: 18, precio: 4.00, estado: "Activo" }
-];
+import { db } from "../config/firebase-config.js";
+import { AuthService } from "../services/AuthService.js";
+import { ProductoService } from "../services/ProductoService.js";
+import { ClienteService } from "../services/ClienteService.js";
+import { ProveedorService } from "../services/ProveedorService.js";
+import { UsuarioService } from "../services/UsuarioService.js";
+import { VentasService } from "../services/VentasService.js";
+import { collection, doc, getDocs, orderBy, query, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-const USUARIOS_INICIALES = [
-  { id: 1, nombre: "Belen Acuache", username: "bacuache", rol: "Administrador", estado: "Activo" },
-  { id: 2, nombre: "Juan Ordoñez", username: "jordoez", rol: "Vendedor", estado: "Activo" },
-  { id: 3, nombre: "Jenifer Lopez", username: "jlopez", rol: "Vendedor", estado: "Inactivo" }
-];
+const $ = id => document.getElementById(id);
+const servicios = { auth:new AuthService(), productos:new ProductoService(), clientes:new ClienteService(), proveedores:new ProveedorService(), usuarios:new UsuarioService(), ventas:new VentasService() };
+let sesion=null, productos=[], clientes=[], proveedores=[], usuarios=[], ventas=[], alertas=[], carrito=[], graficoCategorias=null, focoAnterior=null;
+const escapar = valor => String(valor ?? "").replace(/[&<>'"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+const dinero = n => `S/ ${Number(n||0).toFixed(2)}`;
+const fecha = v => { const d=typeof v?.toDate==="function"?v.toDate():new Date(v||0); return Number.isNaN(d.getTime())?"Sin fecha":d.toLocaleString("es-PE"); };
+const esAdmin = () => sesion?.rol==="Administrador";
+const estadoHtml = valor => `<span class="status-badge ${valor==='Activo'||valor==='Confirmada'||valor==='Resuelta'?'active':'inactive'}">${escapar(valor)}</span>`;
 
-function cargarDatos(clave, iniciales) {
-  const guardado = localStorage.getItem(clave);
-  if (guardado === null) {
-    localStorage.setItem(clave, JSON.stringify(iniciales));
-    return [...iniciales];
-  }
-  try { return JSON.parse(guardado); }
-  catch { return [...iniciales]; }
-}
+function notificar(texto,tipo="success") { const aviso=$("mensaje-sistema")||Object.assign(document.createElement("div"),{id:"mensaje-sistema"}); aviso.className=`alert alert-${tipo} position-fixed top-0 end-0 m-3 shadow`; aviso.setAttribute("role",tipo==="danger"?"alert":"status"); aviso.textContent=texto; if(!aviso.parentNode)document.body.appendChild(aviso); setTimeout(()=>aviso.remove(),4500); }
+function errorFormulario(id,error){$(id).textContent=error.message||"No se pudo completar la operación.";}
+function abrirModal(id){const m=$(id); focoAnterior=document.activeElement; m.classList.add("show");m.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");m.querySelector("input:not([type=hidden]),select,button")?.focus();}
+function cerrarModal(id){const m=$(id);m.classList.remove("show");m.setAttribute("aria-hidden","true");document.body.classList.remove("modal-open");focoAnterior?.focus();}
+function focusTrap(e){const m=e.currentTarget;if(e.key!=="Tab"||!m.classList.contains("show"))return;const f=[...m.querySelectorAll('button,input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x=>!x.disabled&&!x.hidden);if(!f.length)return;const a=f[0],z=f.at(-1);if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}
 
-let productos = cargarDatos("boticaBelen_productos", PRODUCTOS_INICIALES);
-let usuarios = cargarDatos("boticaBelen_usuarios", USUARIOS_INICIALES);
+function aplicarPermisos(){document.querySelectorAll('[data-section="usuarios"],[data-section="proveedores"],[data-section="reportes"]').forEach(x=>x.hidden=!esAdmin()); document.querySelectorAll('#inventario .primary-button,#tablaProductos .action-button').forEach(x=>x.hidden=!esAdmin()); $("nombreUsuarioActivo").textContent=`${sesion.nombre} · ${sesion.rol}`;}
+function mostrarSeccion(nombre){if(!sesion)return; if(!esAdmin()&&["usuarios","proveedores","reportes"].includes(nombre)){notificar("No tiene permisos para abrir este módulo.","warning");nombre="inicio";} document.querySelectorAll(".section").forEach(s=>s.classList.toggle("hidden",s.id!==nombre));document.querySelectorAll(".menu-item").forEach(b=>{const a=b.dataset.section===nombre;b.classList.toggle("active",a);b.setAttribute("aria-current",a?"page":"false");});history.replaceState(null,"",`${location.pathname}?seccion=${nombre}`);if(nombre==="ventas")cargarVentas();if(nombre==="reportes")cargarReporte();if(nombre==="alertas")cargarAlertas();$(nombre)?.querySelector("h1")?.focus?.();}
 
-function guardarProductos() {
-  localStorage.setItem("boticaBelen_productos", JSON.stringify(productos));
-  actualizarResumen();
-}
-function guardarUsuarios() {
-  localStorage.setItem("boticaBelen_usuarios", JSON.stringify(usuarios));
-  actualizarResumen();
-}
+async function cargarProductos(){productos=await servicios.productos.listar();renderProductos(productos);actualizarSelects();actualizarResumen();}
+function renderProductos(lista){$("tablaProductos").innerHTML=lista.length?lista.map(p=>`<tr><td>${escapar(p.codigo)}</td><td>${escapar(p.nombre)}</td><td>${escapar(p.categoria)}</td><td>${Number(p.stock)}</td><td>${Number(p.stockMinimo||0)}</td><td>${dinero(p.precio)}</td><td>${estadoHtml(p.estado)}</td><td>${esAdmin()?`<button class="action-button" type="button" aria-label="Editar ${escapar(p.nombre)}" onclick="editarProducto('${p.id}')"><i class="bi bi-pencil" aria-hidden="true"></i></button>`:"Solo consulta"}</td></tr>`).join(""):'<tr><td colspan="8" class="empty-row">No hay productos registrados.</td></tr>';$("estadoProductos").textContent=`${lista.length} producto(s).`;}
+function filtrarProductos(){const t=$("buscarProducto").value.toLowerCase(),c=$("categoriaFiltro").value;renderProductos(productos.filter(p=>(!t||`${p.codigo} ${p.nombre}`.toLowerCase().includes(t))&&(!c||p.categoria===c)));}
+function abrirModalProducto(id=""){if(!esAdmin())return notificar("Acceso restringido.","danger");const p=productos.find(x=>x.id===id);$("formProducto").reset();$("productoId").value=id;$("tituloModalProducto").textContent=p?"Editar producto":"Nuevo producto";for(const campo of ["codigo","categoria","stock","stockMinimo","precioCompra","precio","lote","fechaVencimiento"]){$(campo).value=p?.[campo]??"";}$("nombreProducto").value=p?.nombre||"";$("estadoProducto").value=p?.estado||"Activo";$("errorProducto").textContent="";abrirModal("modalProducto");}
+async function guardarProducto(e){e.preventDefault();try{const id=$("productoId").value;await servicios.productos.guardar({codigo:$("codigo").value,nombre:$("nombreProducto").value,categoria:$("categoria").value,stock:$("stock").value,stockMinimo:$("stockMinimo").value,precioCompra:$("precioCompra").value,precio:$("precio").value,lote:$("lote").value,fechaVencimiento:$("fechaVencimiento").value,estado:$("estadoProducto").value},id||null);cerrarModal("modalProducto");await cargarProductos();notificar("Producto guardado correctamente.");}catch(err){errorFormulario("errorProducto",err);}}
 
-function mostrarSeccion(nombre) {
-  document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
-  const destino = document.getElementById(nombre);
-  if (destino) destino.classList.remove("hidden");
+async function cargarClientes(){clientes=await servicios.clientes.listar();renderClientes(clientes);actualizarSelects();}
+function renderClientes(lista){$("tablaCliente").innerHTML=lista.length?lista.map(c=>`<tr><td>${escapar(c.dni)}</td><td>${escapar(c.nombre)}</td><td>${escapar(c.apellido)}</td><td>${escapar(c.telefono)}</td><td>${escapar(c.direccion)}</td><td>${estadoHtml(c.estado)}</td><td><button class="action-button" type="button" aria-label="Editar cliente ${escapar(c.nombre)}" onclick="editarCliente('${c.id}')"><i class="bi bi-pencil" aria-hidden="true"></i></button></td></tr>`).join(""):'<tr><td colspan="7" class="empty-row">No hay clientes registrados.</td></tr>';}
+function filtrarClientes(){const t=$("buscarCliente").value.toLowerCase();renderClientes(clientes.filter(c=>`${c.dni} ${c.nombre} ${c.apellido}`.toLowerCase().includes(t)));}
+function abrirModalCliente(id=""){const c=clientes.find(x=>x.id===id);$("formCliente").reset();$("clienteId").value=id;$("tituloModalCliente").textContent=c?"Editar cliente":"Nuevo cliente";for(const campo of ["dni","nombre","apellido","telefono","direccion"]){const ids={dni:"dnicliente",nombre:"nombreCliente",apellido:"apellidoCliente",telefono:"telefonoCliente",direccion:"direccionCliente"};$(ids[campo]).value=c?.[campo]||"";}$("clienteEstado").value=c?.estado||"Activo";$("errorCliente").textContent="";abrirModal("modalCliente");}
+async function guardarCliente(e){e.preventDefault();try{const id=$("clienteId").value;await servicios.clientes.guardar({dni:$("dnicliente").value,nombre:$("nombreCliente").value.trim(),apellido:$("apellidoCliente").value.trim(),telefono:$("telefonoCliente").value.trim(),direccion:$("direccionCliente").value.trim(),estado:$("clienteEstado").value},id||null);cerrarModal("modalCliente");await cargarClientes();notificar("Cliente guardado.");}catch(err){errorFormulario("errorCliente",err);}}
 
-  document.querySelectorAll(".menu-item").forEach(b => b.classList.toggle("active", b.dataset.section === nombre));
+async function cargarProveedores(){if(!esAdmin())return;proveedores=await servicios.proveedores.listar();renderProveedores(proveedores);actualizarResumen();}
+function renderProveedores(lista){$("tablaProveedor").innerHTML=lista.length?lista.map(p=>`<tr><td>${escapar(p.ruc)}</td><td>${escapar(p.razonSocial||p.nombre)}</td><td>${escapar(p.telefono)}</td><td>${escapar(p.direccion)}</td><td>${estadoHtml((p.estado||"").toLowerCase()==="activo"?"Activo":"Inactivo")}</td><td><button class="action-button" type="button" aria-label="Editar proveedor" onclick="editarProveedor('${p.id}')"><i class="bi bi-pencil" aria-hidden="true"></i></button></td></tr>`).join(""):'<tr><td colspan="6" class="empty-row">No hay proveedores registrados.</td></tr>';}
+function filtrarProveedores(){const t=$("buscarProveedor").value.toLowerCase();renderProveedores(proveedores.filter(p=>`${p.ruc} ${p.razonSocial||p.nombre}`.toLowerCase().includes(t)));}
+function abrirModalProveedor(id=""){if(!esAdmin())return;const p=proveedores.find(x=>x.id===id);$("formProveedor").reset();$("proveedorId").value=id;$("tituloModalProveedor").textContent=p?"Editar proveedor":"Nuevo proveedor";$("ruc").value=p?.ruc||"";$("nombreProveedor").value=p?.razonSocial||p?.nombre||"";$("telefonoProveedor").value=p?.telefono||"";$("correoProveedor").value=p?.correo||"";$("direccionProveedor").value=p?.direccion||"";$("estadoProveedor").value=(p?.estado||"Activo").replace(/^./,x=>x.toUpperCase());$("errorProveedor").textContent="";abrirModal("modalProveedor");}
+async function guardarProveedor(e){e.preventDefault();try{const id=$("proveedorId").value;await servicios.proveedores.guardar({ruc:$("ruc").value,nombre:$("nombreProveedor").value,telefono:$("telefonoProveedor").value,correo:$("correoProveedor").value,direccion:$("direccionProveedor").value,estado:$("estadoProveedor").value},id||null);cerrarModal("modalProveedor");await cargarProveedores();notificar("Proveedor guardado.");}catch(err){errorFormulario("errorProveedor",err);}}
 
-  if (nombre === "inventario") mostrarProductos();
-  if (nombre === "usuarios") mostrarUsuarios();
-}
+async function cargarUsuarios(){if(!esAdmin())return;usuarios=await servicios.usuarios.listar();renderUsuarios(usuarios);actualizarResumen();}
+function renderUsuarios(lista){$("tablaUsuarios").innerHTML=lista.length?lista.map(u=>`<tr><td>${escapar(u.nombre)}</td><td>${escapar(u.username)}</td><td>${escapar(u.correo)}</td><td>${escapar(u.rol)}</td><td>${estadoHtml(u.estado)}</td><td><button class="action-button" type="button" aria-label="Editar usuario ${escapar(u.nombre)}" onclick="editarUsuario('${u.id}')"><i class="bi bi-pencil" aria-hidden="true"></i></button></td></tr>`).join(""):'<tr><td colspan="6" class="empty-row">No hay usuarios registrados.</td></tr>';}
+function filtrarUsuarios(){const t=$("buscarUsuario").value.toLowerCase();renderUsuarios(usuarios.filter(u=>`${u.nombre} ${u.username} ${u.rol}`.toLowerCase().includes(t)));}
+function abrirModalUsuario(id=""){if(!esAdmin())return;const u=usuarios.find(x=>x.id===id);$("formUsuario").reset();$("usuarioId").value=id;$("tituloModalUsuario").textContent=u?"Editar usuario":"Nuevo usuario";$("nombreUsuario").value=u?.nombre||"";$("username").value=u?.username||"";$("correoUsuario").value=u?.correo||"";$("rol").value=u?.rol||"";$("estadoUsuario").value=u?.estado||"Activo";$("campoPasswordUsuario").hidden=Boolean(u);$("passwordUsuario").required=!u;$("errorUsuario").textContent="";abrirModal("modalUsuario");}
+async function guardarUsuario(e){e.preventDefault();try{await servicios.usuarios.guardar({nombre:$("nombreUsuario").value,username:$("username").value,correo:$("correoUsuario").value,rol:$("rol").value,estado:$("estadoUsuario").value,password:$("passwordUsuario").value},$("usuarioId").value||null);cerrarModal("modalUsuario");await cargarUsuarios();notificar("Cuenta y perfil guardados.");}catch(err){errorFormulario("errorUsuario",err);}}
 
-function actualizarResumen() {
-  document.getElementById("totalProductos").textContent = productos.length;
-  document.getElementById("totalUsuarios").textContent = usuarios.length;
-}
+function actualizarSelects(){$("ventaProductoSelect").innerHTML='<option value="">Seleccione un producto</option>'+productos.filter(p=>p.estado==="Activo"&&Number(p.stock)>0).map(p=>`<option value="${p.id}">${escapar(p.nombre)} · stock ${p.stock} · ${dinero(p.precio)}</option>`).join("");$("ventaClienteSelect").innerHTML='<option value="">Público general</option>'+clientes.filter(c=>c.estado==="Activo").map(c=>`<option value="${c.id}">${escapar(c.nombre)} ${escapar(c.apellido)}</option>`).join("");}
+function abrirModalVenta(){carrito=[];$("formVentaRapida").reset();renderCarrito();actualizarSelects();$("mensajeVentaRapida").textContent="";abrirModal("modalVenta");}
+function agregarAlCarrito(){const p=productos.find(x=>x.id===$("ventaProductoSelect").value),cantidad=Number($("ventaCantidad").value);if(!p||!Number.isInteger(cantidad)||cantidad<1)return notificar("Seleccione un producto y una cantidad válida.","warning");const actual=carrito.find(x=>x.productoId===p.id),totalCantidad=cantidad+(actual?.cantidad||0);if(totalCantidad>Number(p.stock))return notificar(`Solo hay ${p.stock} unidades disponibles.`,"warning");if(actual)actual.cantidad=totalCantidad;else carrito.push({productoId:p.id,nombre:p.nombre,cantidad,precio:Number(p.precio)});renderCarrito();}
+function renderCarrito(){$("carritoVenta").innerHTML=carrito.length?carrito.map((x,i)=>`<tr><td>${escapar(x.nombre)}</td><td><label class="visually-hidden" for="cantidad-carrito-${i}">Cantidad de ${escapar(x.nombre)}</label><input id="cantidad-carrito-${i}" class="cart-quantity" type="number" min="1" max="${productos.find(p=>p.id===x.productoId)?.stock||x.cantidad}" value="${x.cantidad}" onchange="cambiarCantidadCarrito(${i},this.value)"></td><td>${dinero(x.precio*x.cantidad)}</td><td><button type="button" class="action-button" aria-label="Retirar ${escapar(x.nombre)}" onclick="quitarCarrito(${i})"><i class="bi bi-trash" aria-hidden="true"></i></button></td></tr>`).join(""):'<tr><td colspan="4" class="empty-row">Agregue productos.</td></tr>';$("ventaTotalCalculado").textContent=dinero(carrito.reduce((s,x)=>s+x.precio*x.cantidad,0));}
+function cambiarCantidadCarrito(i,valor){const cantidad=Number(valor),stock=Number(productos.find(p=>p.id===carrito[i]?.productoId)?.stock||0);if(!Number.isInteger(cantidad)||cantidad<1||cantidad>stock){notificar(`Ingrese una cantidad entre 1 y ${stock}.`,"warning");return renderCarrito();}carrito[i].cantidad=cantidad;renderCarrito();}
+function quitarCarrito(i){carrito.splice(i,1);renderCarrito();}
+async function guardarVenta(e){e.preventDefault();if(!carrito.length)return errorFormulario("mensajeVentaRapida",new Error("Agregue al menos un producto."));if(!confirm("¿Confirma el registro de esta venta?"))return;const boton=e.submitter;boton.disabled=true;try{const c=clientes.find(x=>x.id===$("ventaClienteSelect").value);const r=await servicios.ventas.registrarVenta({items:carrito.map(({productoId,cantidad})=>({productoId,cantidad})),clienteId:c?.id||null,clienteNombre:c?`${c.nombre} ${c.apellido}`:"Público general",metodoPago:$("ventaMetodo").value,claveIdempotencia:crypto.randomUUID()});cerrarModal("modalVenta");await Promise.all([cargarProductos(),cargarVentas(),cargarAlertas()]);notificar(`Venta ${r.codigo} registrada por ${dinero(r.total)}.`);}catch(err){errorFormulario("mensajeVentaRapida",new Error(err.message||"No se registró la venta."));}finally{boton.disabled=false;}}
+async function cargarVentas(){ventas=await servicios.ventas.listar();filtrarVentas();actualizarResumen();}
+function filtrarVentas(){const t=$("filtroVentaTexto").value.toLowerCase(),f=$("filtroVentaFecha").value,e=$("filtroVentaEstado").value;const lista=ventas.filter(v=>(!t||`${v.codigo} ${v.clienteNombre} ${v.vendedor}`.toLowerCase().includes(t))&&(!f||fecha(v.fecha).includes(new Date(`${f}T00:00:00`).toLocaleDateString("es-PE")))&&(!e||v.estado===e));$("tablaHistorialVentas").innerHTML=lista.length?lista.map(v=>`<tr><td>${fecha(v.fecha)}</td><td><button type="button" class="link-button" onclick="verDetalleVenta('${v.id}')">${escapar(v.codigo)}</button></td><td>${escapar(v.clienteNombre)}</td><td>${escapar(v.vendedor)}</td><td>${dinero(v.total)}</td><td>${escapar(v.metodoPago)}</td><td>${estadoHtml(v.estado)}</td><td><button type="button" class="action-button" onclick="verDetalleVenta('${v.id}')">Detalle</button>${esAdmin()&&v.estado!=="Anulada"?` <button type="button" class="action-button danger" onclick="anularVenta('${v.id}')">Anular</button>`:""}</td></tr>`).join(""):'<tr><td colspan="8" class="empty-row">No hay ventas para estos filtros.</td></tr>';$("estadoVentas").textContent=`${lista.length} venta(s).`;}
+function verDetalleVenta(id){const v=ventas.find(x=>x.id===id);if(!v)return;const items=(v.items||[]).map(x=>`${x.cantidad} × ${x.nombre} (${dinero(x.subtotal)})`).join("\n");alert(`${v.codigo}\nCliente: ${v.clienteNombre}\nVendedor: ${v.vendedor}\nPago: ${v.metodoPago}\nEstado: ${v.estado}\n\n${items}\n\nTotal: ${dinero(v.total)}${v.motivoAnulacion?`\nMotivo: ${v.motivoAnulacion}`:""}`);}
+async function anularVenta(id){const motivo=prompt("Motivo de la anulación (mínimo 5 caracteres):");if(motivo===null)return;if(motivo.trim().length<5)return notificar("Ingrese un motivo válido.","warning");if(!confirm("¿Confirma la anulación? El stock será restituido."))return;try{await servicios.ventas.anular(id,motivo.trim());await Promise.all([cargarVentas(),cargarProductos(),cargarAlertas()]);notificar("Venta anulada y stock restituido.");}catch(err){notificar(err.message||"No se pudo anular.","danger");}}
 
-function escapar(valor) {
-  return String(valor ?? "").replace(/[&<>"']/g, caracter => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  })[caracter]);
-}
+async function cargarAlertas(){const snap=await getDocs(query(collection(db,"alertas"),orderBy("fecha","desc")));alertas=snap.docs.map(d=>({id:d.id,...d.data()}));renderAlertas();}
+function renderAlertas(){const f=$("filtroAlerta").value,lista=alertas.filter(a=>!f||a.estado===f);$("tablaAlertas").innerHTML=lista.length?lista.map(a=>`<tr><td>${escapar(a.productoNombre)}</td><td>${escapar(a.tipo)}</td><td>${Number(a.stock)}</td><td>${Number(a.stockMinimo)}</td><td>${estadoHtml(a.estado)} ${a.leida?'<span class="status-badge active">Leída</span>':esAdmin()?`<button type="button" class="action-button" onclick="marcarAlertaLeida('${a.id}')">Marcar leída</button>`:'<span class="status-badge inactive">Pendiente</span>'}</td></tr>`).join(""):'<tr><td colspan="5" class="empty-row">No hay alertas en este estado.</td></tr>';}
+async function marcarAlertaLeida(id){try{await updateDoc(doc(db,"alertas",id),{leida:true,fechaLectura:serverTimestamp()});await cargarAlertas();notificar("Alerta marcada como leída.");}catch(err){notificar(err.message||"No se pudo actualizar la alerta.","danger");}}
+function actualizarResumen(){$("totalProductos").textContent=productos.length;$("totalUsuarios").textContent=esAdmin()?usuarios.length:"—";$("totalProveedores").textContent=esAdmin()?proveedores.length:"—";const hoy=new Date().toLocaleDateString("es-PE");$("totalVentasDia").textContent=ventas.filter(v=>v.estado!=="Anulada"&&fecha(v.fecha).includes(hoy)).length;}
+async function cargarReporte(){if(!esAdmin())return;const confirmadas=ventas.filter(v=>v.estado!=="Anulada");$("reporteMontoTotal").textContent=dinero(confirmadas.reduce((s,v)=>s+Number(v.total),0));$("reporteTotalOps").textContent=confirmadas.length;$("reporteStockCritico").textContent=productos.filter(p=>Number(p.stock)<=Number(p.stockMinimo||0)).length;const categorias=productos.reduce((a,p)=>(a[p.categoria]=(a[p.categoria]||0)+1,a),{});$("reporteCategoriasList").innerHTML=Object.entries(categorias).map(([c,n])=>`<div class="category-item"><span>${escapar(c)}</span><strong>${n} producto(s)</strong></div>`).join("");if(window.Chart){graficoCategorias?.destroy();graficoCategorias=new Chart($("graficoCategorias"),{type:"doughnut",data:{labels:Object.keys(categorias),datasets:[{data:Object.values(categorias),backgroundColor:["#2949ad","#4568d8","#e9434b","#f49a3d","#188653"]}]},options:{responsive:true,maintainAspectRatio:false}});}}
 
-function etiquetaEstado(estado) {
-  const activo = estado === "Activo";
-  return `<span class="status ${activo ? "active" : "inactive"}">${escapar(estado)}</span>`;
-}
-
-// ---------------- INVENTARIO ----------------
-function mostrarProductos(lista = productos) {
-  const tabla = document.getElementById("tablaProductos");
-  if (!tabla) return;
-  if (!lista.length) {
-    tabla.innerHTML = '<tr><td colspan="7" class="empty-row">No se encontraron productos.</td></tr>';
-    return;
-  }
-  tabla.innerHTML = lista.map(p => {
-    const indice = productos.indexOf(p);
-    return `<tr>
-      <td>${escapar(p.codigo)}</td><td>${escapar(p.nombre)}</td><td>${escapar(p.categoria)}</td>
-      <td>${Number(p.stock)}</td><td>S/. ${Number(p.precio).toFixed(2)}</td>
-      <td>${etiquetaEstado(p.estado)}</td>
-      <td><div class="action-group">
-        <button class="icon-button edit-button" title="Editar" onclick="editarProducto(${indice})">✎</button>
-        <button class="icon-button delete-button" title="Eliminar" onclick="eliminarProducto(${indice})">⌫</button>
-      </div></td></tr>`;
-  }).join("");
-}
-
-function filtrarProductos() {
-  const texto = document.getElementById("buscarProducto").value.trim().toLowerCase();
-  const categoria = document.getElementById("categoriaFiltro").value;
-  const lista = productos.filter(p =>
-    (p.nombre.toLowerCase().includes(texto) || p.codigo.toLowerCase().includes(texto)) &&
-    (!categoria || p.categoria === categoria)
-  );
-  mostrarProductos(lista);
-}
-
-function abrirModalProducto(indice = "") {
-  document.getElementById("formProducto").reset();
-  document.getElementById("indiceProducto").value = indice;
-  document.getElementById("tituloModalProducto").textContent = indice === "" ? "Nuevo producto" : "Editar producto";
-  if (indice !== "") {
-    const p = productos[indice];
-    document.getElementById("codigo").value = p.codigo;
-    document.getElementById("nombreProducto").value = p.nombre;
-    document.getElementById("categoria").value = p.categoria;
-    document.getElementById("stock").value = p.stock;
-    document.getElementById("precio").value = p.precio;
-    document.getElementById("estadoProducto").value = p.estado;
-  }
-  abrirModal("modalProducto");
-}
-function editarProducto(indice) { abrirModalProducto(String(indice)); }
-function cerrarModalProducto() { cerrarModal("modalProducto"); }
-
-document.getElementById("formProducto").addEventListener("submit", event => {
-  event.preventDefault();
-  const indice = document.getElementById("indiceProducto").value;
-  const producto = {
-    codigo: document.getElementById("codigo").value.trim(),
-    nombre: document.getElementById("nombreProducto").value.trim(),
-    categoria: document.getElementById("categoria").value,
-    stock: Number(document.getElementById("stock").value),
-    precio: Number(document.getElementById("precio").value),
-    estado: document.getElementById("estadoProducto").value
-  };
-
-  if (productos.some((p, i) => p.codigo.toLowerCase() === producto.codigo.toLowerCase() && String(i) !== indice)) {
-    alert("Ya existe un producto con ese código.");
-    return;
-  }
-  if (indice === "") productos.push(producto);
-  else productos[Number(indice)] = producto;
-
-  guardarProductos();
-  filtrarProductos();
-  cerrarModalProducto();
-  alert("Producto guardado correctamente.");
-});
-
-function eliminarProducto(indice) {
-  if (!confirm(`¿Deseas eliminar el producto ${productos[indice].nombre}?`)) return;
-  productos.splice(indice, 1);
-  guardarProductos();
-  filtrarProductos();
-}
-
-// ---------------- USUARIOS ----------------
-function mostrarUsuarios(lista = usuarios) {
-  const tabla = document.getElementById("tablaUsuarios");
-  if (!tabla) return;
-  if (!lista.length) {
-    tabla.innerHTML = '<tr><td colspan="6" class="empty-row">No se encontraron usuarios.</td></tr>';
-    return;
-  }
-  tabla.innerHTML = lista.map(u => {
-    const indice = usuarios.indexOf(u);
-    return `<tr>
-      <td>${Number(u.id)}</td><td>${escapar(u.nombre)}</td><td>${escapar(u.username)}</td>
-      <td>${escapar(u.rol)}</td><td>${etiquetaEstado(u.estado)}</td>
-      <td><div class="action-group">
-        <button class="icon-button edit-button" title="Editar" onclick="editarUsuario(${indice})">✎</button>
-        <button class="icon-button delete-button" title="Eliminar" onclick="eliminarUsuario(${indice})">⌫</button>
-      </div></td></tr>`;
-  }).join("");
-}
-
-function filtrarUsuarios() {
-  const texto = document.getElementById("buscarUsuario").value.trim().toLowerCase();
-  mostrarUsuarios(usuarios.filter(u =>
-    u.nombre.toLowerCase().includes(texto) ||
-    u.username.toLowerCase().includes(texto) ||
-    u.rol.toLowerCase().includes(texto)
-  ));
-}
-
-function siguienteIdUsuario() {
-  return usuarios.length ? Math.max(...usuarios.map(u => Number(u.id))) + 1 : 1;
-}
-
-function abrirModalUsuario(indice = "") {
-  document.getElementById("formUsuario").reset();
-  document.getElementById("indiceUsuario").value = indice;
-  document.getElementById("tituloModalUsuario").textContent = indice === "" ? "Nuevo usuario" : "Editar usuario";
-  if (indice !== "") {
-    const u = usuarios[indice];
-    document.getElementById("nombreUsuario").value = u.nombre;
-    document.getElementById("username").value = u.username;
-    document.getElementById("rol").value = u.rol;
-    document.getElementById("estadoUsuario").value = u.estado;
-  }
-  abrirModal("modalUsuario");
-}
-function editarUsuario(indice) { abrirModalUsuario(String(indice)); }
-function cerrarModalUsuario() { cerrarModal("modalUsuario"); }
-
-document.getElementById("formUsuario").addEventListener("submit", event => {
-  event.preventDefault();
-  const indice = document.getElementById("indiceUsuario").value;
-  const username = document.getElementById("username").value.trim();
-
-  if (usuarios.some((u, i) => u.username.toLowerCase() === username.toLowerCase() && String(i) !== indice)) {
-    alert("Ese nombre de usuario ya está registrado.");
-    return;
-  }
-
-  const usuario = {
-    id: indice === "" ? siguienteIdUsuario() : usuarios[Number(indice)].id,
-    nombre: document.getElementById("nombreUsuario").value.trim(),
-    username,
-    rol: document.getElementById("rol").value,
-    estado: document.getElementById("estadoUsuario").value
-  };
-
-  if (indice === "") usuarios.push(usuario);
-  else usuarios[Number(indice)] = usuario;
-
-  guardarUsuarios();
-  filtrarUsuarios();
-  cerrarModalUsuario();
-  alert("Usuario guardado correctamente.");
-});
-
-function eliminarUsuario(indice) {
-  if (!confirm(`¿Deseas eliminar al usuario ${usuarios[indice].nombre}?`)) return;
-  usuarios.splice(indice, 1);
-  guardarUsuarios();
-  filtrarUsuarios();
-}
-
-// ---------------- MODALES ----------------
-function abrirModal(id) {
-  const modal = document.getElementById(id);
-  modal.classList.add("show");
-  modal.setAttribute("aria-hidden", "false");
-}
-function cerrarModal(id) {
-  const modal = document.getElementById(id);
-  modal.classList.remove("show");
-  modal.setAttribute("aria-hidden", "true");
-}
-
-document.querySelectorAll(".modal").forEach(modal => {
-  modal.addEventListener("click", event => {
-    if (event.target === modal) cerrarModal(modal.id);
-  });
-});
-
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape") {
-    cerrarModalProducto();
-    cerrarModalUsuario();
-  }
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  mostrarProductos();
-  mostrarUsuarios();
-  actualizarResumen();
-});
+async function iniciar(perfil){sesion=perfil;aplicarPermisos();try{await Promise.all([cargarProductos(),cargarClientes(),cargarVentas(),cargarAlertas(),...(esAdmin()?[cargarUsuarios(),cargarProveedores()]:[])]);const solicitada=new URLSearchParams(location.search).get("seccion")||"inicio";mostrarSeccion(solicitada);}catch(err){notificar(`No se pudieron cargar los datos: ${err.message}`,"danger");}}
+servicios.auth.observarSesion(perfil=>perfil?iniciar(perfil):location.replace("/pages/login"));
+$("btn-cerrar-sesion")?.addEventListener("click",async e=>{e.preventDefault();await servicios.auth.cerrarSesion();location.replace("/pages/login");});
+Object.assign(window,{mostrarSeccion,abrirModalProducto,editarProducto:abrirModalProducto,abrirModalCliente,editarCliente:abrirModalCliente,abrirModalProveedor,editarProveedor:abrirModalProveedor,abrirModalUsuario,editarUsuario:abrirModalUsuario,abrirModalVenta,quitarCarrito,cambiarCantidadCarrito,verDetalleVenta,marcarAlertaLeida,anularVenta,cerrarModalProducto:()=>cerrarModal("modalProducto"),cerrarModalCliente:()=>cerrarModal("modalCliente"),cerrarModalProveedor:()=>cerrarModal("modalProveedor"),cerrarModalUsuario:()=>cerrarModal("modalUsuario"),cerrarModalVenta:()=>cerrarModal("modalVenta")});
+[["formProducto",guardarProducto],["formCliente",guardarCliente],["formProveedor",guardarProveedor],["formUsuario",guardarUsuario],["formVentaRapida",guardarVenta]].forEach(([id,fn])=>$(id)?.addEventListener("submit",fn));
+[["buscarProducto","input",filtrarProductos],["categoriaFiltro","change",filtrarProductos],["buscarCliente","input",filtrarClientes],["buscarProveedor","input",filtrarProveedores],["buscarUsuario","input",filtrarUsuarios],["filtroVentaTexto","input",filtrarVentas],["filtroVentaFecha","change",filtrarVentas],["filtroVentaEstado","change",filtrarVentas],["filtroAlerta","change",renderAlertas]].forEach(([id,ev,fn])=>$(id)?.addEventListener(ev,fn));
+$("agregarProductoVenta")?.addEventListener("click",agregarAlCarrito);document.querySelectorAll(".menu-item").forEach(b=>b.addEventListener("click",()=>mostrarSeccion(b.dataset.section)));document.querySelectorAll(".modal").forEach(m=>{m.addEventListener("keydown",focusTrap);m.addEventListener("click",e=>{if(e.target===m)cerrarModal(m.id);});});document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelector(".modal.show")&&cerrarModal(document.querySelector(".modal.show").id);});

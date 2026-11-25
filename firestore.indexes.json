@@ -1,0 +1,1 @@
+{"indexes":[{"collectionGroup":"ventas","queryScope":"COLLECTION","fields":[{"fieldPath":"estado","order":"ASCENDING"},{"fieldPath":"fecha","order":"DESCENDING"}]}],"fieldOverrides":[]}

@@ -1,0 +1,308 @@
+/* ==========================================================
+   BOTICA BELÉN - ESTILOS DE ACCESIBILIDAD WCAG 2.1 AA
+   ========================================================== */
+
+/* Evita el salto de scroll que provoca Chromium al insertar la barra
+   de accesibilidad en el DOM (scroll anchoring). */
+html { overflow-anchor: none; }
+
+/* Barra de Herramientas Accesible Superior */
+#wcag-toolbar {
+  background-color: #1a252f;
+  color: #ffffff;
+  padding: 6px 16px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.875rem;
+  border-bottom: 2px solid #0056b3;
+  position: relative;
+  z-index: 9999;
+}
+
+/* Permite a las personas que navegan con teclado omitir el menú repetitivo. */
+.skip-link {
+  background: #ffffff;
+  color: #003d7a;
+  font-weight: 700;
+  left: 1rem;
+  padding: .6rem 1rem;
+  position: fixed;
+  top: -4rem;
+  z-index: 10000;
+}
+
+.skip-link:focus {
+  outline: 3px solid #ffbf47;
+  outline-offset: 2px;
+  top: 1rem;
+}
+
+.wcag-bar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.wcag-label {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wcag-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.wcag-btn {
+  background-color: #ffffff;
+  color: #1a252f;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wcag-btn:hover,
+.wcag-btn:focus-visible {
+  background-color: #e2e6ea;
+  outline: 3px solid #ffbf47;
+  outline-offset: 2px;
+}
+
+.wcag-contrast-btn {
+  background-color: #000000;
+  color: #ffff00;
+  border: 2px solid #ffff00;
+}
+
+.wcag-contrast-btn:hover {
+  background-color: #333333;
+}
+
+/* Navegación Visible por Teclado (Focus Indicators) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #0056b3 !important;
+  outline-offset: 2px !important;
+}
+
+@media (max-width: 576px) {
+  #wcag-toolbar { padding: 8px 12px; }
+  .wcag-bar-container { align-items: flex-start; }
+  .wcag-label { width: 100%; }
+  .wcag-buttons { flex-wrap: wrap; }
+}
+
+/* ==========================================================
+   MODO ALTO CONTRASTE (WCAG AAA - Ratio > 7:1)
+   ========================================================== */
+body.wcag-high-contrast {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.wcag-high-contrast header,
+body.wcag-high-contrast aside,
+body.wcag-high-contrast .sidebar,
+body.wcag-high-contrast .main-content,
+body.wcag-high-contrast .card,
+body.wcag-high-contrast .table-card,
+body.wcag-high-contrast .modal-content,
+body.wcag-high-contrast .navbar {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffff00 !important;
+}
+
+body.wcag-high-contrast h1,
+body.wcag-high-contrast h2,
+body.wcag-high-contrast h3,
+body.wcag-high-contrast h4,
+body.wcag-high-contrast strong,
+body.wcag-high-contrast p,
+body.wcag-high-contrast span,
+body.wcag-high-contrast label,
+body.wcag-high-contrast th,
+body.wcag-high-contrast td {
+  color: #ffffff !important;
+}
+
+body.wcag-high-contrast a,
+body.wcag-high-contrast .eyebrow,
+body.wcag-high-contrast .menu-item.active,
+body.wcag-high-contrast strong[id^="total"] {
+  color: #ffff00 !important;
+}
+
+body.wcag-high-contrast button,
+body.wcag-high-contrast .btn,
+body.wcag-high-contrast .primary-button,
+body.wcag-high-contrast .secondary-button {
+  background-color: #000000 !important;
+  color: #ffff00 !important;
+  border: 2px solid #ffff00 !important;
+  font-weight: 700 !important;
+}
+
+body.wcag-high-contrast button:hover,
+body.wcag-high-contrast button:focus-visible {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  outline: 3px solid #ffffff !important;
+}
+
+body.wcag-high-contrast input,
+body.wcag-high-contrast select,
+body.wcag-high-contrast textarea {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+body.wcag-high-contrast table,
+body.wcag-high-contrast th,
+body.wcag-high-contrast td {
+  border-color: #ffffff !important;
+}
+
+/* ------------------------------------------------------------
+   Alto contraste para los componentes del panel principal
+   definidos en style2.css
+   ------------------------------------------------------------ */
+body.wcag-high-contrast .header,
+body.wcag-high-contrast .sidebar,
+body.wcag-high-contrast .main-content,
+body.wcag-high-contrast .section,
+body.wcag-high-contrast .summary-card,
+body.wcag-high-contrast .table-card,
+body.wcag-high-contrast .table-wrap,
+body.wcag-high-contrast .toolbar,
+body.wcag-high-contrast .toolbar input,
+body.wcag-high-contrast .toolbar select,
+body.wcag-high-contrast .modal-content,
+body.wcag-high-contrast .icon-button,
+body.wcag-high-contrast .quick-actions,
+body.wcag-high-contrast .quick-actions-grid button,
+body.wcag-high-contrast .page-heading,
+body.wcag-high-contrast .admin-header,
+body.wcag-high-contrast .admin-sidebar,
+body.wcag-high-contrast .admin-nav-link {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.wcag-high-contrast .summary-card,
+body.wcag-high-contrast .table-card,
+body.wcag-high-contrast .toolbar input,
+body.wcag-high-contrast .toolbar select,
+body.wcag-high-contrast .modal-content,
+body.wcag-high-contrast .welcome-banner,
+body.wcag-high-contrast .quick-actions-grid button,
+body.wcag-high-contrast .admin-nav-link {
+  border: 2px solid #ffff00 !important;
+}
+
+body.wcag-high-contrast .summary-card p,
+body.wcag-high-contrast .subtitle,
+body.wcag-high-contrast .menu-caption,
+body.wcag-high-contrast .sidebar-note,
+body.wcag-high-contrast .empty-row,
+body.wcag-high-contrast .table-status,
+body.wcag-high-contrast .welcome-banner p:last-child {
+  color: #ffffff !important;
+}
+
+body.wcag-high-contrast .summary-card strong,
+body.wcag-high-contrast .page-heading h1,
+body.wcag-high-contrast .eyebrow,
+body.wcag-high-contrast thead th {
+  color: #ffff00 !important;
+}
+
+body.wcag-high-contrast thead th {
+  background-color: #000000 !important;
+}
+
+body.wcag-high-contrast .welcome-banner {
+  background: #000000 !important;
+}
+
+body.wcag-high-contrast .welcome-banner h1 {
+  color: #ffff00 !important;
+}
+
+body.wcag-high-contrast .menu-item {
+  color: #ffffff !important;
+}
+
+body.wcag-high-contrast .menu-item.active {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  border: 2px solid #ffff00;
+}
+
+body.wcag-high-contrast .status.active {
+  background-color: #000000 !important;
+  color: #7cfc00 !important;
+  border: 2px solid #7cfc00;
+}
+
+body.wcag-high-contrast .status.inactive {
+  background-color: #000000 !important;
+  color: #ff9a9a !important;
+  border: 2px solid #ff9a9a;
+}
+
+body.wcag-high-contrast .status.neutral {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff;
+}
+
+body.wcag-high-contrast .icon-button {
+  border: 2px solid #ffff00 !important;
+  color: #ffff00 !important;
+}
+
+body.wcag-high-contrast .system-toast {
+  background-color: #000000 !important;
+  color: #ffff00 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+body.wcag-high-contrast #reportes :is(.report-card, .card-panel) {
+  background: #000;
+  border-color: #fff;
+  color: #fff;
+}
+
+body.wcag-high-contrast #reportes .report-card > i {
+  background: #000;
+  border: 1px solid currentColor;
+}
+
+body.wcag-high-contrast #reportes :is(.report-card > i, .card-panel h2 i) {
+  color: #ff0;
+}
+
+body.wcag-high-contrast #reportes .category-item {
+  border-color: #fff;
+}
+
+body.wcag-high-contrast #reportes .text-muted {
+  color: #fff !important;
+}
