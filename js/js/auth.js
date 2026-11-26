@@ -1,11 +1,11 @@
-import { AuthService } from "../services/AuthService.js?v=2.0.0-spark";
+import { AuthService } from "../services/AuthService.js?v=2.3.4";
 const authService = new AuthService();
 const form = document.getElementById("task-form");
 const alerta = document.getElementById("login-alerta");
-authService.observarSesion(usuario => { if (usuario) window.location.replace("/pages"); });
+authService.observarSesion(usuario => { if (usuario) window.location.replace("/pages/index.html"); });
 form?.addEventListener("submit", async event => {
   event.preventDefault(); const boton = document.getElementById("btn-login"); alerta.classList.add("d-none"); boton.disabled = true; boton.textContent = "Verificando…";
-  try { await authService.iniciarSesion(document.getElementById("login-correo").value, document.getElementById("login-pass").value); window.location.replace("/pages"); }
+  try { await authService.iniciarSesion(document.getElementById("login-correo").value, document.getElementById("login-pass").value); window.location.replace("/pages/index.html"); }
   catch (error) { alerta.textContent = mensajeAutenticacion(error); alerta.classList.remove("d-none"); document.getElementById("login-correo").focus(); }
   finally { boton.disabled = false; boton.textContent = "Iniciar sesión"; }
 });

@@ -27,13 +27,6 @@ export function huellaVenta({items, clienteId = null, metodoPago}) {
   return JSON.stringify({ items: agruparItems(items), clienteId: clienteId || null, metodoPago: texto(metodoPago) });
 }
 
-export function fechaCalendarioValida(valor) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return false;
-  const [anio, mes, dia] = valor.split("-").map(Number);
-  const fecha = new Date(Date.UTC(anio, mes - 1, dia));
-  return fecha.getUTCFullYear() === anio && fecha.getUTCMonth() === mes - 1 && fecha.getUTCDate() === dia;
-}
-
 export function validarProductoVenta(datos, cantidad) {
   const stock = Number(datos?.stock), precio = Number(datos?.precio);
   if (!estadoActivo(datos?.estado) || !Number.isSafeInteger(stock) || stock < 0 || !Number.isFinite(precio) || precio <= 0 || cantidad > stock) {

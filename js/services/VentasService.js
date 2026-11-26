@@ -1,7 +1,7 @@
-import { auth, db } from "../config/firebase-config.js?v=2.0.0-spark";
-import { collection, doc, getDocs, orderBy, query, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
-import { agruparItems, errorDominio, estadoActivo, huellaVenta, idValido, texto, validarProductoVenta } from "../domain/operaciones.js?v=2.0.0-spark";
-import { actualizarAlertaEnTransaccion } from "./FirestoreUtils.js?v=2.0.0-spark";
+import { auth, db } from "../config/firebase-config.js?v=2.3.4";
+import { collection, doc, getDoc, getDocs, orderBy, query, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+import { agruparItems, errorDominio, estadoActivo, huellaVenta, idValido, texto, validarProductoVenta } from "../domain/operaciones.js?v=2.3.4";
+import { actualizarAlertaEnTransaccion } from "./FirestoreUtils.js?v=2.3.4";
 
 const ventasRef = collection(db, "ventas");
 const fechaEnMs = valor => typeof valor?.toDate === "function" ? valor.toDate().getTime() : new Date(valor || 0).getTime();
@@ -17,6 +17,17 @@ export class VentasService {
     if(!uid)throw errorDominio("unauthenticated","Inicie sesión.");
     if(!idValido(clave)||(clienteId&&!idValido(clienteId))||!["Efectivo","Yape / Plin","Tarjeta"].includes(metodoPago))throw errorDominio("invalid-argument","Venta incompleta.");
     const items=agruparItems(datos.items),huella=huellaVenta({items,clienteId,metodoPago}),ventaRef=doc(db,"ventas",clave);
+    const contadorRef=doc(db,"contadores","ventas");
+    // Considera también las ventas históricas que no tenían correlativo visible.
+    let baseInicial=0;
+    try {
+      const ventasSnap=await getDocs(collection(db,"ventas"));
+      baseInicial=ventasSnap.size;
+      for(const d of ventasSnap.docs){
+        const m=String(d.data()?.codigo||"").match(/^V-venta-(\d+)$/i);
+        if(m)baseInicial=Math.max(baseInicial,Number(m[1]));
+      }
+    } catch {}
     return runTransaction(db,async tx=>{
       const previa=await tx.get(ventaRef);
       const perfilSnap=await tx.get(doc(db,"usuario",uid));
@@ -29,6 +40,7 @@ export class VentasService {
       }
       const clienteSnap=clienteId?await tx.get(doc(db,"cliente",clienteId)):null;
       if(clienteId&&(!clienteSnap.exists()||!estadoActivo(clienteSnap.data().estado)))throw errorDominio("failed-precondition","Cliente no disponible.");
+      const contadorSnap=await tx.get(contadorRef);
       const productoRefs=items.map(x=>doc(db,"producto",x.productoId));
       const productoSnaps=[];for(const ref of productoRefs)productoSnaps.push(await tx.get(ref));
       const alertaSnaps=[];for(const item of items)alertaSnaps.push(await tx.get(doc(db,"alertas",item.productoId)));
@@ -42,7 +54,12 @@ export class VentasService {
         tx.set(doc(db,"movimientos",`${clave}_${snap.id}`),{operacionId:clave,tipo:"venta",productoId:snap.id,cantidad:item.cantidad,stockAnterior:validado.stock,stockNuevo,vendedorId:uid,precioUnitario:validado.precio,subtotal:validado.subtotal,fecha:serverTimestamp()});
         actualizarAlertaEnTransaccion(tx,snap.id,productoNuevo,alertaSnaps[i]);
       });
-      const totalFinal=Number(total.toFixed(2)),codigo=`V-${clave}`;
+      // Correlativo seguro
+      const ultimoActual=Math.max(contadorSnap.exists()?Number(contadorSnap.data().ultimo||0):0,baseInicial);
+      const siguiente=ultimoActual+1;
+      const codigo=`V-venta-${String(siguiente).padStart(3,"0")}`;
+      tx.set(contadorRef,{ultimo:siguiente,actualizadoEn:serverTimestamp()},{merge:true});
+      const totalFinal=Number(total.toFixed(2));
       tx.set(ventaRef,{codigo,items:detalle,total:totalFinal,clienteId,clienteNombre:clienteSnap?`${clienteSnap.data().nombre} ${clienteSnap.data().apellido}`:"Público general",metodoPago,huella,vendedorId:uid,vendedor:perfil.nombre,estado:"Confirmada",fecha:serverTimestamp()});
       return{id:clave,codigo,total:totalFinal};
     });

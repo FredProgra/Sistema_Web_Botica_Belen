@@ -34,7 +34,7 @@ service cloud.firestore {
         && ((movement.tipo == 'venta'
               && request.resource.data.stock == resource.data.stock - movement.cantidad
               && movement.precioUnitario == resource.data.precio
-              && movement.subtotal == movement.precioUnitario * movement.cantidad
+              && movement.subtotal is number && movement.subtotal > 0
               && getAfter(/databases/$(database)/documents/ventas/$(operationId)).data.vendedorId == request.auth.uid
               && getAfter(/databases/$(database)/documents/ventas/$(operationId)).data.estado == 'Confirmada')
             || (movement.tipo == 'anulacion'
@@ -126,6 +126,18 @@ service cloud.firestore {
       allow update: if admin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida','fechaLectura'])
         && request.resource.data.leida == true && request.resource.data.fechaLectura == request.time;
+      allow delete: if false;
+    }
+
+    match /contadores/{id} {
+      allow read: if active();
+      allow create: if active() && id == 'ventas'
+        && request.resource.data.keys().hasAll(['ultimo'])
+        && request.resource.data.ultimo is int && request.resource.data.ultimo >= 0;
+      allow update: if active() && id == 'ventas'
+        && request.resource.data.keys().hasAll(['ultimo'])
+        && request.resource.data.ultimo is int
+        && request.resource.data.ultimo == int(resource.data.get('ultimo', 0)) + 1;
       allow delete: if false;
     }
   }

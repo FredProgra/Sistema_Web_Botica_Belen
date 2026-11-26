@@ -273,9 +273,57 @@ body.wcag-high-contrast .status.neutral {
   border: 2px solid #ffffff;
 }
 
-body.wcag-high-contrast .icon-button {
+body.wcag-high-contrast .icon-button,
+body.wcag-high-contrast .action-button {
   border: 2px solid #ffff00 !important;
   color: #ffff00 !important;
+  background-color: #000000 !important;
+}
+
+body.wcag-high-contrast .action-button:hover,
+body.wcag-high-contrast .action-button:focus-visible,
+body.wcag-high-contrast .action-button:active {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+}
+
+body.wcag-high-contrast .action-button:disabled {
+  opacity: 1;
+  border-color: #8b96ad !important;
+  color: #8b96ad !important;
+  background-color: #000000 !important;
+}
+
+body.wcag-high-contrast .pagination-bar {
+  color: #ffff00 !important;
+}
+
+body.wcag-high-contrast .sale-detail-grid dd,
+body.wcag-high-contrast .sale-detail-total strong {
+  color: #ffffff !important;
+}
+
+body.wcag-high-contrast .sale-detail-grid,
+body.wcag-high-contrast .sale-detail-cancellation {
+  background-color: #000000 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+body.wcag-high-contrast .sale-detail-grid dt,
+body.wcag-high-contrast .sale-detail-total span {
+  color: #ffff00 !important;
+}
+
+body.wcag-high-contrast .status-badge.active {
+  background-color: #000000 !important;
+  color: #7cfc00 !important;
+  border: 2px solid #7cfc00;
+}
+
+body.wcag-high-contrast .status-badge.inactive {
+  background-color: #000000 !important;
+  color: #ff9a9a !important;
+  border: 2px solid #ff9a9a;
 }
 
 body.wcag-high-contrast .system-toast {

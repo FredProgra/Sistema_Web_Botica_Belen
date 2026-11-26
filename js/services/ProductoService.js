@@ -1,8 +1,8 @@
-import { db } from "../config/firebase-config.js?v=2.0.0-spark";
+import { db } from "../config/firebase-config.js?v=2.3.4";
 import { collection, doc, getDocs, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
-import { validarProducto } from "../utils/validaciones.js?v=2.0.0-spark";
-import { claveUnica, errorDominio } from "../domain/operaciones.js?v=2.0.0-spark";
-import { actualizarAlertaEnTransaccion } from "./FirestoreUtils.js?v=2.0.0-spark";
+import { validarProducto } from "../utils/validaciones.js?v=2.3.4";
+import { claveUnica, errorDominio } from "../domain/operaciones.js?v=2.3.4";
+import { actualizarAlertaEnTransaccion } from "./FirestoreUtils.js?v=2.3.4";
 export class ProductoService {
   async listar(){const snap=await getDocs(collection(db,"producto"));return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),"es"));}
   async guardar(datos,id=null){

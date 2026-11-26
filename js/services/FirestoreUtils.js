@@ -1,6 +1,6 @@
-import { db } from "../config/firebase-config.js?v=2.0.0-spark";
+import { db } from "../config/firebase-config.js?v=2.3.4";
 import { doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
-import { estadoActivo } from "../domain/operaciones.js?v=2.0.0-spark";
+import { estadoActivo } from "../domain/operaciones.js?v=2.3.4";
 
 export function actualizarAlertaEnTransaccion(tx, productoId, producto, alertaSnap) {
   const alertaRef = doc(db, "alertas", productoId);

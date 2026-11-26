@@ -1,4 +1,4 @@
-import { auth, authReady, db } from "../config/firebase-config.js?v=2.0.0-spark";
+import { auth, authReady, db } from "../config/firebase-config.js?v=2.3.4";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 

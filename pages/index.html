@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -8,21 +8,21 @@
   <link rel="icon" type="image/png" href="../img/Botica_belen.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="../css/style2.css">
-  <link rel="stylesheet" href="../css/wcag.css">
+  <link rel="stylesheet" href="../css/style2.css?v=2.2.0">
+  <link rel="stylesheet" href="../css/wcag.css?v=2.2.0">
   <link rel="stylesheet" href="../css/design-system.css">
 </head>
 <body>
   <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
 
   <header class="header">
-    <a class="brand" href="/pages" aria-label="Botica Belén, inicio">
+    <a class="brand" href="/pages/index.html" aria-label="Botica Belén, inicio">
       <img src="../img/Botica_belen.png" alt="Logo de Botica Belén">
     </a>
     <div class="header-user">
       <span class="user-avatar" aria-hidden="true"><i class="bi bi-person-fill"></i></span>
       <span id="nombreUsuarioActivo">Cargando…</span>
-      <a class="logout-link" href="/pages/login" id="btn-cerrar-sesion" aria-label="Cerrar sesión">
+      <a class="logout-link" href="/pages/login.html" id="btn-cerrar-sesion" aria-label="Cerrar sesión">
         <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
         <span class="logout-texto">Salir</span>
       </a>
@@ -317,8 +317,8 @@
           </button>
         </div>
 
-        <div class="toolbar sales-filters" aria-label="Filtros del historial">
-          <div class="field"><label for="filtroVentaTexto">Número, cliente o vendedor</label><input id="filtroVentaTexto" type="search" autocomplete="off"></div>
+        <div class="toolbar" aria-label="Filtros del historial">
+          <div class="field"><label class="visually-hidden" for="filtroVentaTexto">Número, cliente/DNI o vendedor</label><input id="filtroVentaTexto" type="search" placeholder="Buscar por número, cliente o vendedor…" autocomplete="off"></div>
           <div class="field"><label for="filtroVentaFecha">Fecha</label><input id="filtroVentaFecha" type="date"></div>
           <div class="field"><label for="filtroVentaEstado">Estado</label><select id="filtroVentaEstado"><option value="">Todos</option><option>Confirmada</option><option>Anulada</option></select></div>
         </div>
@@ -330,16 +330,16 @@
               <p class="table-status" id="estadoVentas" role="status" aria-live="polite"></p>
             </div>
           </div>
-          <div class="table-wrap table-scroll">
+          <div class="table-wrap">
               <table>
                 <caption class="visually-hidden">Últimas ventas registradas</caption>
                 <thead>
                   <tr>
                     <th scope="col">Fecha</th>
-                    <th scope="col">Número</th>
+                    <th scope="col">Número de venta</th>
                     <th scope="col">Cliente</th>
                     <th scope="col">Vendedor</th>
-                    <th scope="col">Total</th>
+                    <th scope="col" class="cell-right">Total</th>
                     <th scope="col">Pago</th>
                     <th scope="col">Estado</th>
                     <th scope="col">Acciones</th>
@@ -350,6 +350,11 @@
                 </tbody>
               </table>
           </div>
+          <nav id="paginacionVentas" class="pagination-bar" aria-label="Paginación del historial de ventas" hidden>
+            <button id="ventasPaginaAnterior" class="action-button" type="button" aria-label="Página anterior" onclick="cambiarPaginaVentas(-1)"><i class="bi bi-chevron-left" aria-hidden="true"></i> Anterior</button>
+            <span id="paginaVentas" role="status" aria-live="polite"></span>
+            <button id="ventasPaginaSiguiente" class="action-button" type="button" aria-label="Página siguiente" onclick="cambiarPaginaVentas(1)">Siguiente <i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+          </nav>
         </div>
       </section>
 
@@ -365,13 +370,58 @@
           </button>
         </div>
 
+        <div class="toolbar" aria-label="Filtros de reportes">
+          <div class="field"><label for="reporteFechaInicio">Desde</label><input id="reporteFechaInicio" type="date"></div>
+          <div class="field"><label for="reporteFechaFin">Hasta</label><input id="reporteFechaFin" type="date"></div>
+          <div class="field" id="campoReporteVendedor"><label for="reporteVendedor">Vendedor</label><select id="reporteVendedor"><option value="">Todos</option></select></div>
+          <div class="field"><button type="button" class="primary-button" id="aplicarFiltrosReporte" onclick="aplicarFiltrosReporte()">Aplicar</button></div>
+          <div class="field"><button type="button" class="secondary-button" id="limpiarFiltrosReporte" onclick="limpiarFiltrosReporte()">Limpiar</button></div>
+        </div>
+        <div class="toolbar" aria-label="Filtros rápidos">
+          <div class="field"><button type="button" class="action-button" onclick="filtroRapidoReporte('hoy')">Hoy</button></div>
+          <div class="field"><button type="button" class="action-button" onclick="filtroRapidoReporte('ayer')">Ayer</button></div>
+          <div class="field"><button type="button" class="action-button" onclick="filtroRapidoReporte('semana')">Esta semana</button></div>
+          <div class="field"><button type="button" class="action-button" onclick="filtroRapidoReporte('mes')">Este mes</button></div>
+          <div class="field"><button type="button" class="action-button" onclick="filtroRapidoReporte('mesAnterior')">Mes anterior</button></div>
+        </div>
+        <p id="estadoReporte" class="table-status" role="status" aria-live="polite"></p>
+
         <div class="row g-3 mb-4 report-grid">
-          <div class="col-md-4"><article class="report-card h-100"><i class="bi bi-cash-stack" aria-hidden="true"></i><p>Total recaudado</p><strong id="reporteMontoTotal">S/ 0.00</strong></article></div>
-          <div class="col-md-4"><article class="report-card h-100"><i class="bi bi-receipt" aria-hidden="true"></i><p>Operaciones confirmadas</p><strong id="reporteTotalOps">0</strong></article></div>
+          <div class="col-md-3"><article class="report-card h-100"><i class="bi bi-cash-stack" aria-hidden="true"></i><p>Total vendido</p><strong id="reporteMontoTotal">S/ 0.00</strong></article></div>
+          <div class="col-md-3"><article class="report-card h-100"><i class="bi bi-receipt" aria-hidden="true"></i><p>Operaciones</p><strong id="reporteTotalOps">0</strong></article></div>
+          <div class="col-md-3"><article class="report-card h-100"><i class="bi bi-box-seam" aria-hidden="true"></i><p>Productos vendidos</p><strong id="reporteProductosVendidos">0</strong></article></div>
+          <div class="col-md-3"><article class="report-card h-100"><i class="bi bi-graph-up" aria-hidden="true"></i><p>Promedio por venta</p><strong id="reportePromedioVenta">S/ 0.00</strong></article></div>
+        </div>
+        <div class="row g-3 mb-4 report-grid">
           <div class="col-md-4"><article class="report-card h-100"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><p>Productos con stock bajo</p><strong id="reporteStockCritico">0</strong></article></div>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-4 mb-4">
+          <div class="col-lg-7"><section class="card-panel h-100" aria-labelledby="titulo-ventas-vendedor"><h2 id="titulo-ventas-vendedor"><i class="bi bi-bar-chart" aria-hidden="true"></i> Ventas por vendedor</h2><div class="chart-container"><canvas id="graficoVentasVendedor" aria-label="Gráfico de ventas por vendedor" role="img"></canvas></div></section></div>
+          <div class="col-lg-5"><section class="card-panel h-100" aria-labelledby="titulo-top-productos"><h2 id="titulo-top-productos"><i class="bi bi-star" aria-hidden="true"></i> Productos más vendidos</h2><div id="reporteTopProductos" class="category-list"></div></section></div>
+        </div>
+
+        <div class="table-card mb-4">
+          <div class="table-card-heading"><div><h2><i class="bi bi-people" aria-hidden="true"></i> Resumen por vendedor</h2></div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Vendedor</th><th>Operaciones</th><th>Productos vendidos</th><th>Total</th><th>Promedio</th></tr></thead>
+              <tbody id="tablaReporteVendedores"><tr><td colspan="5" class="empty-row">Sin datos.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-card-heading"><div><h2><i class="bi bi-clock-history" aria-hidden="true"></i> Historial de ventas del periodo</h2><p class="table-status" id="estadoReporteVentas" role="status" aria-live="polite"></p></div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Fecha</th><th>Número</th><th>Vendedor</th><th>Cliente</th><th class="cell-right">Total</th><th>Estado</th><th>Acción</th></tr></thead>
+              <tbody id="tablaReporteVentas"><tr><td colspan="7" class="empty-row">Sin datos.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="row g-4 mt-4">
           <div class="col-lg-7"><section class="card-panel h-100" aria-labelledby="titulo-categorias"><h2 id="titulo-categorias"><i class="bi bi-pie-chart" aria-hidden="true"></i> Inventario por categoría</h2><p id="estadoGrafico" hidden role="status">El gráfico no está disponible. Consulte el resumen de categorías.</p><div class="chart-container"><canvas id="graficoCategorias" aria-label="Gráfico de distribución de productos por categoría" role="img"></canvas></div></section></div>
           <div class="col-lg-5"><section class="card-panel h-100" aria-labelledby="titulo-resumen-categorias"><h2 id="titulo-resumen-categorias"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Resumen de categorías</h2><div id="reporteCategoriasList" class="category-list"></div></section></div>
         </div>
@@ -379,6 +429,7 @@
       <section id="alertas" class="section hidden" aria-labelledby="titulo-alertas">
         <div class="page-heading"><div><p class="eyebrow">CONTROL DE INVENTARIO</p><h1 id="titulo-alertas">Alertas de stock</h1><p class="subtitle">Productos agotados o en el nivel mínimo definido.</p></div></div>
         <div class="toolbar"><div class="field"><label for="filtroAlerta">Filtrar alertas</label><select id="filtroAlerta"><option value="Pendiente">Pendientes</option><option value="Resuelta">Resueltas</option><option value="">Todas</option></select></div></div>
+        <p id="estadoAlertas" class="table-status" role="status" aria-live="polite"></p>
         <div class="table-card"><div class="table-wrap"><table><caption class="visually-hidden">Alertas de inventario</caption><thead><tr><th scope="col">Producto</th><th scope="col">Tipo</th><th scope="col">Stock</th><th scope="col">Mínimo</th><th scope="col">Estado</th></tr></thead><tbody id="tablaAlertas"><tr><td colspan="5" class="empty-row">Cargando alertas…</td></tr></tbody></table></div></div>
       </section>
     </main>
@@ -477,6 +528,106 @@
           <button type="submit" class="primary-button"><i class="bi bi-check-circle" aria-hidden="true"></i> Registrar venta</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal confirmación de venta -->
+  <div id="modalConfirmarVenta" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalConfirmarVenta" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">VENTAS</p>
+          <h2 id="tituloModalConfirmarVenta">Confirmar venta</h2>
+        </div>
+        <button class="close-button" type="button" aria-label="Cerrar confirmación" onclick="cerrarModalConfirmarVenta()">×</button>
+      </div>
+      <p id="mensajeConfirmarVenta">¿Confirma el registro de esta venta?</p>
+      <p class="sale-total"><span>Total de la venta:</span><strong id="confirmarVentaTotal">S/ 0.00</strong></p>
+      <p id="errorConfirmarVenta" class="form-message" role="alert"></p>
+      <div id="procesandoConfirmarVenta" class="form-message" hidden>Registrando venta, por favor espere…</div>
+      <div class="modal-actions">
+        <button type="button" class="secondary-button" id="btnCancelarConfirmarVenta" onclick="cerrarModalConfirmarVenta()">Cancelar</button>
+        <button type="button" class="primary-button" id="btnConfirmarVenta" onclick="confirmarVentaModal()">Confirmar venta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal anulación de venta -->
+  <div id="modalAnularVenta" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalAnularVenta" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">VENTAS</p>
+          <h2 id="tituloModalAnularVenta">Anular venta</h2>
+        </div>
+        <button class="close-button" type="button" aria-label="Cerrar anulación" onclick="cerrarModalAnularVenta()">×</button>
+      </div>
+      <div class="form-field">
+        <label for="motivoAnulacionVenta">Motivo de anulación (mínimo 5 caracteres)</label>
+        <textarea id="motivoAnulacionVenta" rows="3" maxlength="200"></textarea>
+      </div>
+      <p id="errorAnularVenta" class="form-message" role="alert"></p>
+      <div id="procesandoAnularVenta" class="form-message" hidden>Anulando venta, por favor espere…</div>
+      <div class="modal-actions">
+        <button type="button" class="secondary-button" id="btnCancelarAnularVenta" onclick="cerrarModalAnularVenta()">Cancelar</button>
+        <button type="button" class="primary-button" id="btnConfirmarAnularVenta" onclick="confirmarAnulacionModal()">Confirmar anulación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal detalle de venta -->
+  <div id="modalDetalleVenta" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalDetalleVenta" aria-hidden="true">
+    <div class="modal-content sale-detail-modal">
+      <div class="modal-heading sale-detail-heading">
+        <div>
+          <p class="eyebrow">VENTAS</p>
+          <h2 id="tituloModalDetalleVenta">Detalle de venta</h2>
+          <p class="sale-detail-code">N.º <span id="detalleVentaCodigo"></span></p>
+        </div>
+        <div class="sale-detail-heading-actions">
+          <span id="detalleVentaEstado"></span>
+          <button class="close-button" type="button" aria-label="Cerrar detalle de venta" onclick="cerrarModalDetalleVenta()">&times;</button>
+        </div>
+      </div>
+
+      <dl class="sale-detail-grid">
+        <div><dt>Fecha</dt><dd id="detalleVentaFecha"></dd></div>
+        <div><dt>Cliente</dt><dd id="detalleVentaCliente"></dd></div>
+        <div><dt>Vendedor</dt><dd id="detalleVentaVendedor"></dd></div>
+        <div><dt>Método de pago</dt><dd id="detalleVentaPago"></dd></div>
+        <div><dt>Estado</dt><dd id="detalleVentaEstadoTexto"></dd></div>
+      </dl>
+
+      <h3 class="sale-detail-subtitle">Detalle de productos</h3>
+      <div class="table-wrap">
+        <table class="sale-detail-table">
+          <caption class="visually-hidden">Productos incluidos en la venta</caption>
+          <thead>
+            <tr>
+              <th scope="col">Producto</th>
+              <th scope="col">Cantidad</th>
+              <th scope="col">Precio unitario</th>
+              <th scope="col">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody id="detalleVentaItems"></tbody>
+        </table>
+      </div>
+
+      <div class="sale-detail-total"><span>Total de la venta</span><strong id="detalleVentaTotal"></strong></div>
+
+      <section id="detalleVentaAnulacion" class="sale-detail-cancellation" aria-labelledby="tituloDetalleAnulacion" hidden>
+        <h3 id="tituloDetalleAnulacion" class="sale-detail-subtitle">Información de anulación</h3>
+        <dl class="sale-detail-grid">
+          <div><dt>Motivo de anulación</dt><dd id="detalleVentaMotivo"></dd></div>
+          <div><dt>Fecha de anulación</dt><dd id="detalleVentaFechaAnulacion"></dd></div>
+          <div><dt>Usuario responsable</dt><dd id="detalleVentaAnuladoPor"></dd></div>
+        </dl>
+      </section>
+
+      <div class="modal-actions">
+        <button type="button" class="secondary-button" onclick="cerrarModalDetalleVenta()">Cerrar</button>
+      </div>
     </div>
   </div>
 
@@ -626,7 +777,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.js"></script>
-  <script type="module" src="../js/js/java2.js?v=2.0.0-spark"></script>
+  <script type="module" src="../js/js/java2.js?v=2.3.4"></script>
   <script src="../js/components/wcag-accessibility.js"></script>
 </body>
 </html>

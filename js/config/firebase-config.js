@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
@@ -12,7 +12,8 @@ export const firebaseConfig = {
   measurementId: "G-DF3WCLPCY2"
 };
 
-const app = initializeApp(firebaseConfig);
+// Evita inicializaciones duplicadas cuando el navegador conserva módulos en caché.
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);

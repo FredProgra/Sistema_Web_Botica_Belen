@@ -1,8 +1,8 @@
 import { deleteApp, initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import { createUserWithEmailAndPassword, deleteUser, getAuth, inMemoryPersistence, setPersistence, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
-import { auth, db, firebaseConfig } from "../config/firebase-config.js?v=2.0.0-spark";
+import { auth, db, firebaseConfig } from "../config/firebase-config.js?v=2.3.4";
 import { collection, doc, getDocs, query, runTransaction, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
-import { claveUnica, datosUsuario, errorDominio } from "../domain/operaciones.js?v=2.0.0-spark";
+import { claveUnica, datosUsuario, errorDominio } from "../domain/operaciones.js?v=2.3.4";
 
 export class UsuarioService {
   async listar(){const snap=await getDocs(collection(db,"usuario"));return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),"es"));}
